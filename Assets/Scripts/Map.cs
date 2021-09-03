@@ -15,8 +15,7 @@ public class Map : MonoBehaviour
 
     [NonSerialized] public Tile[,] _tileGrid;
     private Vector3 _mapWorldSize;
-
-    public List<EntityController> entitiesList;
+    
     private void TileNeighbours(Tile tile)
     {
         for (int xx = tile.gridPosition.x - 1; xx <= tile.gridPosition.x + 1; xx++)
@@ -55,7 +54,7 @@ public class Map : MonoBehaviour
         {
             for (int y = 0; y < size.y; y++)
             {
-                Vector2 worldPos = new Vector2(x, y) * offset;
+                Vector2 worldPos = new Vector3(x, y) * offset;
                 _tileGrid[x, y] = Instantiate(_tilePrefab, worldPos, Quaternion.identity).GetComponent<Tile>();
                 _tileGrid[x, y].gridPosition = new Vector2Int(x, y);
                 _tileGrid[x, y].worldPosition = _tileGrid[x, y].transform.position;
@@ -85,17 +84,5 @@ public class Map : MonoBehaviour
         _mapWorldSize = new Vector3(_tileGrid[size.x - 1, 0].transform.position.x,
                                         _tileGrid[0, size.y - 1].transform.position.y,
                                             0f);
-    }
-    
-    private void OnDrawGizmos()
-    {
-        if (_tileGrid != null)
-        { 
-            foreach (Tile tile in _tileGrid)
-            {
-                Gizmos.color = tile.walkable ? Color.white : Color.yellow;
-                Gizmos.DrawCube(tile.worldPosition, tile.transform.localScale);
-            }
-        }
     }
 }
