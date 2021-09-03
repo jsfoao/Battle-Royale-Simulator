@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
@@ -27,7 +25,7 @@ public class Pathfinding : MonoBehaviour
         return cost;
     }
 
-    private void BacktrackPath(Tile startTile, Tile targetTile)
+    private List<Tile> BacktrackPath(Tile startTile, Tile targetTile)
     {
         List<Tile> tilePath = new List<Tile>();
         Tile currentTile = targetTile;
@@ -37,11 +35,10 @@ public class Pathfinding : MonoBehaviour
             currentTile = currentTile.parentTile;
         }
         tilePath.Reverse();
-
-        _map.tilePath = tilePath;
+        return tilePath;
     }
     
-    public void FindPath(Vector3 startPosition, Vector3 targetPosition)
+    public List<Tile> FindPath(Vector3 startPosition, Vector3 targetPosition)
     {
         Tile startTile = _map.TileFromWorldPosition(startPosition);
         Tile targetTile = _map.TileFromWorldPosition(targetPosition);
@@ -68,10 +65,8 @@ public class Pathfinding : MonoBehaviour
             closedList.Add(currentTile);
             
             if (currentTile == targetTile)
-            { 
-                BacktrackPath(startTile, targetTile);
-                Debug.Log("Found path...");
-                return;
+            {
+                return BacktrackPath(startTile, targetTile);
             }
 
             // Evaluate all neighbour tiles
@@ -96,11 +91,7 @@ public class Pathfinding : MonoBehaviour
                 }
             }
         }
-    }
-
-    private void Update()
-    {
-        FindPath(seeker.position, target.position);
+        return null;
     }
 
     private void Start()

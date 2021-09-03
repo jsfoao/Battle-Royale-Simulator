@@ -10,7 +10,7 @@ public class Entity : MonoBehaviour
     private void OnDrawGizmos()
     {
         _transform = transform;
-        Gizmos.color = Color.blue;
+        Gizmos.color = Color.green;
         
         Gizmos.DrawSphere(_transform.position, _transform.localScale.x / 2);
     }

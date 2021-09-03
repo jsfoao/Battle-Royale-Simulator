@@ -8,6 +8,7 @@ using UnityEngine.UIElements;
 public class Tile : MonoBehaviour
 {    
     [NonSerialized] public Vector2Int gridPosition;
+    [NonSerialized]
     public Vector3 worldPosition;
     public bool walkable;
     

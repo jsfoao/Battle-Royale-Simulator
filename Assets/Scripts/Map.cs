@@ -13,8 +13,10 @@ public class Map : MonoBehaviour
     [SerializeField] 
     private GameObject _tilePrefab;
 
-    public Tile[,] _tileGrid;
+    [NonSerialized] public Tile[,] _tileGrid;
     private Vector3 _mapWorldSize;
+
+    public List<EntityController> entitiesList;
     private void TileNeighbours(Tile tile)
     {
         for (int xx = tile.gridPosition.x - 1; xx <= tile.gridPosition.x + 1; xx++)
@@ -84,24 +86,15 @@ public class Map : MonoBehaviour
                                         _tileGrid[0, size.y - 1].transform.position.y,
                                             0f);
     }
-
-    public List<Tile> tilePath;
+    
     private void OnDrawGizmos()
     {
         if (_tileGrid != null)
-        {
+        { 
             foreach (Tile tile in _tileGrid)
             {
-                Gizmos.color = tile.walkable ? Color.white : Color.black;
-                if (tilePath != null)
-                {
-                    if (tilePath.Contains(tile))
-                    {
-                        Gizmos.color = Color.yellow;
-                    }
-                }
+                Gizmos.color = tile.walkable ? Color.white : Color.yellow;
                 Gizmos.DrawCube(tile.worldPosition, tile.transform.localScale);
-                
             }
         }
     }
