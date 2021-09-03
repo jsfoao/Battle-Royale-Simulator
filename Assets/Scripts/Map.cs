@@ -1,0 +1,108 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Map : MonoBehaviour
+{
+    private Transform _transform;
+    [Header("Map Spawn")]
+    [SerializeField] 
+    public Vector2Int size;
+    [SerializeField] 
+    public float offset;
+    [SerializeField] 
+    private GameObject _tilePrefab;
+
+    public Tile[,] _tileGrid;
+    private Vector3 _mapWorldSize;
+    private void TileNeighbours(Tile tile)
+    {
+        for (int xx = tile.gridPosition.x - 1; xx <= tile.gridPosition.x + 1; xx++)
+        {
+            for (int yy = tile.gridPosition.y - 1; yy <= tile.gridPosition.y + 1; yy++)
+            {
+                Vector2Int currentPos = new Vector2Int(xx, yy);
+                
+                if (currentPos == tile.gridPosition)
+                    continue;
+                if (currentPos.x >= size.x || currentPos.x < 0)
+                    continue;
+                if (currentPos.y >= size.y || currentPos.y < 0)
+                    continue;
+                
+                // Add to neighbour tiles list
+                tile.neighbourTiles.Add(_tileGrid[currentPos.x, currentPos.y]);
+            }
+        }
+    }
+
+    private void FindAllNeighbours()
+    {
+        for (int x = 0; x < size.x; x++)
+        {
+            for (int y = 0; y < size.y; y++)
+            {
+                TileNeighbours(_tileGrid[x, y]);
+            }
+        }
+    }
+
+    private void SpawnTiles()
+    {
+        for (int x = 0; x < size.x; x++)
+        {
+            for (int y = 0; y < size.y; y++)
+            {
+                Vector2 worldPos = new Vector2(x, y) * offset;
+                _tileGrid[x, y] = Instantiate(_tilePrefab, worldPos, Quaternion.identity).GetComponent<Tile>();
+                _tileGrid[x, y].gridPosition = new Vector2Int(x, y);
+                _tileGrid[x, y].worldPosition = _tileGrid[x, y].transform.position;
+                
+                // Set Tiles as children of Map
+                _tileGrid[x, y].transform.SetParent(_transform);
+                _tileGrid[x, y].name = $"Tile({x}, {y})";
+            }
+        }
+    }
+
+    public Tile TileFromWorldPosition(Vector3 worldPosition)
+    {
+        Vector2Int convertedPosition = new Vector2Int();
+        convertedPosition.x = Mathf.RoundToInt(((size.x - 1) * worldPosition.x) / _mapWorldSize.x);
+        convertedPosition.y = Mathf.RoundToInt(((size.y - 1) * worldPosition.y) / _mapWorldSize.y);
+        return _tileGrid[convertedPosition.x, convertedPosition.y];
+    }
+    
+    private void Awake()
+    {
+        _transform = GetComponent<Transform>();
+        _tileGrid = new Tile[size.x, size.y];
+        
+        SpawnTiles();
+        FindAllNeighbours();
+        _mapWorldSize = new Vector3(_tileGrid[size.x - 1, 0].transform.position.x,
+                                        _tileGrid[0, size.y - 1].transform.position.y,
+                                            0f);
+    }
+
+    public List<Tile> tilePath;
+    private void OnDrawGizmos()
+    {
+        if (_tileGrid != null)
+        {
+            foreach (Tile tile in _tileGrid)
+            {
+                Gizmos.color = tile.walkable ? Color.white : Color.black;
+                if (tilePath != null)
+                {
+                    if (tilePath.Contains(tile))
+                    {
+                        Gizmos.color = Color.yellow;
+                    }
+                }
+                Gizmos.DrawCube(tile.worldPosition, tile.transform.localScale);
+                
+            }
+        }
+    }
+}
