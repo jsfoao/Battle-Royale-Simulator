@@ -14,7 +14,7 @@ public class Map : MonoBehaviour
     private GameObject _tilePrefab;
 
     [NonSerialized] public Tile[,] _tileGrid;
-    private Vector3 _mapWorldSize;
+    public Vector3 worldSize;
     
     private void TileNeighbours(Tile tile)
     {
@@ -69,8 +69,8 @@ public class Map : MonoBehaviour
     public Tile TileFromWorldPosition(Vector3 worldPosition)
     {
         Vector2Int convertedPosition = new Vector2Int();
-        convertedPosition.x = Mathf.RoundToInt(((size.x - 1) * worldPosition.x) / _mapWorldSize.x);
-        convertedPosition.y = Mathf.RoundToInt(((size.y - 1) * worldPosition.y) / _mapWorldSize.y);
+        convertedPosition.x = Mathf.RoundToInt(((size.x - 1) * worldPosition.x) / worldSize.x);
+        convertedPosition.y = Mathf.RoundToInt(((size.y - 1) * worldPosition.y) / worldSize.y);
         return _tileGrid[convertedPosition.x, convertedPosition.y];
     }
     
@@ -81,7 +81,7 @@ public class Map : MonoBehaviour
         
         SpawnTiles();
         FindAllNeighbours();
-        _mapWorldSize = new Vector3(_tileGrid[size.x - 1, 0].transform.position.x,
+        worldSize = new Vector3(_tileGrid[size.x - 1, 0].transform.position.x,
                                         _tileGrid[0, size.y - 1].transform.position.y,
                                             0f);
     }

@@ -42,6 +42,9 @@ public class Pathfinding : MonoBehaviour
     {
         Tile startTile = _map.TileFromWorldPosition(startPosition);
         Tile targetTile = _map.TileFromWorldPosition(targetPosition);
+        
+        if (startTile == targetTile)
+            return null;
 
         List<Tile> openList = new List<Tile>(); 
         HashSet<Tile> closedList = new HashSet<Tile>();

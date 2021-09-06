@@ -15,9 +15,17 @@ public class Tile : MonoBehaviour
     public int gCost;
     public int hCost;
     public int fCost => gCost + hCost;
-
     public Tile parentTile;
-
     public List<Tile> neighbourTiles;
+    
+    private Color _tileColor;
 
+    private void Update()
+    {
+        GetComponent<SpriteRenderer>().color = walkable ? Color.white : Color.black;
+    }
+
+    private void Start()
+    {
+    }
 }
