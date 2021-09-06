@@ -25,7 +25,6 @@ public class EntityController : MonoBehaviour
         guarding,
         searching
     }
-
     [SerializeField] private State state = State.searching;
 
     private void SetRandomTarget()
