@@ -59,6 +59,9 @@
      <Compile Include="Assets\Scripts\Map.cs" />
      <Compile Include="Assets\Scripts\Timer.cs" />
      <Compile Include="Assets\Scripts\GameCamera.cs" />
+     <Compile Include="Assets\EntitySenses.cs" />
+     <Compile Include="Assets\EntityAI.cs" />
+     <Compile Include="Assets\GameManager.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />

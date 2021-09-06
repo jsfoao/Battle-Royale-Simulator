@@ -4,12 +4,10 @@ using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
 {
-    public Transform seeker, target;
-
     private const int STRAIGHT_COST = 10;
     private const int DIAGONAL_COST = 14;
     
-    [SerializeField] private Map _map;
+    [NonSerialized] private Map _map;
     private int TileDistanceCost(Tile tileA, Tile tileB)
     {
         int cost = 0;

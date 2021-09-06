@@ -14,7 +14,7 @@ public class Map : MonoBehaviour
     private GameObject _tilePrefab;
 
     [NonSerialized] public Tile[,] _tileGrid;
-    public Vector3 worldSize;
+    [NonSerialized] public Vector3 worldSize;
     
     private void TileNeighbours(Tile tile)
     {

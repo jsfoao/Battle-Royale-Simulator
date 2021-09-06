@@ -18,12 +18,21 @@ public class GameCamera : MonoBehaviour
     private Vector3 direction = Vector3.zero;
     
     [Header("Zoom")] 
-    [SerializeField] private float currentZoom;
+    [SerializeField] private float currentZoom = 15f;
     [SerializeField] private float minZoom = 20f;
     [SerializeField] private float maxZoom = 5f;
     [SerializeField] private float sensitivity = 1f;
     [SerializeField] private float zoomSpeed = 20f;
 
+    private void StationaryCamera()
+    {
+        _map = GameObject.Find("Map").GetComponent<Map>();
+        Vector3 newPos = new Vector3(((_map.size.x - 1) * _map.offset) / 2, 
+            ((_map.size.y - 1) * _map.offset) / 2, 
+            -10f);
+        transform.position = newPos;
+    }
+    
     private void CameraMovement()
     {
         if (Input.GetKey(KeyCode.W))
@@ -74,5 +83,6 @@ public class GameCamera : MonoBehaviour
     {
         _transform = transform;
         _camera = GetComponent<Camera>();
+        StationaryCamera();
     }
 }

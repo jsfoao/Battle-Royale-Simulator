@@ -19,21 +19,39 @@ public class EntityController : MonoBehaviour
     private float currentTime;
 
     private bool startSim;
-    
-    public enum State
-    {
-        guarding,
-        searching
-    }
-    [SerializeField] private State state = State.searching;
 
-    private void SetRandomTarget()
+    public enum GeneralState
     {
-        target.position = new Vector3(Random.Range(0f, _map.worldSize.x - 1), Random.Range(0f, _map.worldSize.y -1), 0f);
+        Guarding,
+        Wandering,
+        Searching,
+        Investigating,
+        Attacking,
+        Defending
+    }
+    
+    public enum ActionState
+    {
+        Neutral,
+        Looting,
+        Walking,
+        Shooting
+    }
+
+    [Header("State Machine")]
+    [SerializeField] private GeneralState generalState = GeneralState.Wandering;
+    [SerializeField] private ActionState actionState = ActionState.Neutral;
+
+    #region Movement
+    private void MoveToRandomTarget()
+    {
+        target.position = new Vector3(Random.Range(0f, _map.worldSize.x - 1), Random.Range(0f, _map.worldSize.y - 1),
+            0f);
         if (_map.TileFromWorldPosition(target.position).walkable == false)
         {
             return;
         }
+
         MoveToTarget(target);
     }
 
@@ -43,11 +61,12 @@ public class EntityController : MonoBehaviour
         {
             StopCoroutine(movement);
         }
-        
+
         if (_map.TileFromWorldPosition(_transform.position) == _map.TileFromWorldPosition(target.position))
         {
             return;
         }
+
         currentPath = _pathfinding.FindPath(_transform.position, target.position);
         movement = StartCoroutine(MoveAlongPath(currentPath));
     }
@@ -73,22 +92,71 @@ public class EntityController : MonoBehaviour
             yield return null;
         }
     }
+    #endregion
+
+    #region Rotation
+    // todo rotation
+    #endregion
+    
+    #region State Machine
+    private void DoGuarding()
+    {
+        StopCoroutine(movement);
+    }
+
+    private void DoWandering()
+    {
+        currentTime -= Time.deltaTime;
+        if (currentTime <= 0)
+        {
+            currentTime = Random.Range(2f, 5f);
+            MoveToRandomTarget();
+        }
+    }
+
+    private void DoSearching()
+    {
+        
+    }
+
+    private void DoInvestigating()
+    {
+        
+    }
+    
+    private void DoAttacking()
+    {
+        
+    }
+
+    private void DoDefending()
+    {
+        
+    }
+    #endregion
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        switch (generalState)
         {
-            startSim = !startSim;
-        }
-
-        if (startSim)
-        {
-            currentTime -= Time.deltaTime;
-            if (currentTime <= 0)
-            {
-                currentTime = Random.Range(1f, 3f);
-                SetRandomTarget();
-            }
+            case GeneralState.Guarding:
+                DoGuarding();
+                break;
+            case GeneralState.Wandering:
+                DoWandering();
+                break;
+            case GeneralState.Searching:
+                DoSearching();
+                break;
+            case GeneralState.Investigating:
+                DoInvestigating();
+                break;
+            case GeneralState.Attacking:
+                DoAttacking();
+                break;
+            case GeneralState.Defending:
+                DoDefending();
+                break;
         }
     }
 

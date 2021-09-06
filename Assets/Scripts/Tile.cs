@@ -24,8 +24,4 @@ public class Tile : MonoBehaviour
     {
         GetComponent<SpriteRenderer>().color = walkable ? Color.white : Color.black;
     }
-
-    private void Start()
-    {
-    }
 }
