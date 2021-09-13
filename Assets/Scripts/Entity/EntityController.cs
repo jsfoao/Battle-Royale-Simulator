@@ -14,14 +14,16 @@ public class EntityController : MonoBehaviour
     [NonSerialized] public Map map;
     private List<Tile> currentPath;
     [NonSerialized] public Transform target;
-
-    [SerializeField] private float speed = 0.05f;
+    
+    [SerializeField] private float sprintSpeed = 0.05f;
+    [SerializeField] private float walkSpeed = 0.02f;
+    
     [SerializeField] private float rotationSpeed = 8f;
     public Coroutine movement;
     public bool moving;
     private float targetTime = 3f;
     private float currentTime;
-
+    
     // Moves to random target in designated area
     public void MoveToRandomTarget(Rect area)
     {
@@ -67,11 +69,12 @@ public class EntityController : MonoBehaviour
 
                 currentTarget = tilePath[pathIndex].worldPosition;
             }
-
-            _transform.position = Vector2.MoveTowards(_transform.position, currentTarget, speed);
             
             // Rotate to moving direction
             LookAtTarget(currentTarget, rotationSpeed);
+            
+            _transform.position = Vector2.MoveTowards(_transform.position, currentTarget, sprintSpeed);
+            
             yield return null;
         }
     }

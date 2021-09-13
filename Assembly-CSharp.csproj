@@ -54,14 +54,14 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\Entity\EntitySenses.cs" />
      <Compile Include="Assets\Scripts\Entity\Entity.cs" />
-     <Compile Include="Assets\Scripts\Tile.cs" />
+     <Compile Include="Assets\Scripts\Map\Tile.cs" />
      <Compile Include="Assets\Scripts\Pathfinding.cs" />
      <Compile Include="Assets\Scripts\Entity\EntityController.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
-     <Compile Include="Assets\Scripts\Map.cs" />
+     <Compile Include="Assets\Scripts\Map\Map.cs" />
      <Compile Include="Assets\Scripts\Entity\EntityAI.cs" />
-     <Compile Include="Assets\Scripts\Timer.cs" />
      <Compile Include="Assets\Scripts\GameCamera.cs" />
+     <Compile Include="Assets\Scripts\Weapon.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />

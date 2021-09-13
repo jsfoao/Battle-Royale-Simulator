@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class EntityAI : MonoBehaviour
@@ -11,28 +13,31 @@ public class EntityAI : MonoBehaviour
     private EntityController controller;
     
     [Header("AI Tick")]
-    private float targetTime = 1f;
+    [SerializeField] private float tick = 1f;
     private float currentTime;
 
     [Header("Distance Sense")]
-    [SerializeField] private float senseDistance = 10f;
-    [SerializeField] private List<GameObject> testList;
+    [SerializeField] private List<GameObject> surroundingEntities;
+    [SerializeField] private List<GameObject> seenEntities;
+
+    [Header("Vision Sense")] 
+    [SerializeField] private float viewDistance = 25f;
+    [SerializeField] [Range(0, 90)]
+    private float fieldOfView = 20f;
 
     [Header("State Machine")]
     [SerializeField] private GeneralState generalState = GeneralState.Wandering;
-    [SerializeField] private ActionState actionState = ActionState.Neutral;
 
     private Rect mapArea;
+    private Vector2 peripheralRight;
+    private Vector2 peripheralLeft;
     
     public enum GeneralState
     {
+        Nothing,
         MouseMode,
         Wandering,
-    }
-    
-    public enum ActionState
-    {
-        Neutral,
+        Shooting
     }
 
     private List<GameObject> SurroundingEntities(float range)
@@ -42,27 +47,61 @@ public class EntityAI : MonoBehaviour
             return null;
         }
         
-        List<GameObject> surroundingEntities = new List<GameObject>();
+        // Check if there are any entities in range of player
+        List<GameObject> entities = new List<GameObject>();
         foreach (var entity in gameManager.entitiesList)
         {
             float distance = (entity.transform.position - _transform.position).magnitude;
             if (distance > range)
             {
-                if (surroundingEntities.Contains(entity))
+                if (entities.Contains(entity))
                 {
-                    surroundingEntities.Remove(entity);
+                    entities.Remove(entity);
                 }
                 continue;
             }
 
-            if (!surroundingEntities.Contains(entity) && entity != gameObject)
+            if (!entities.Contains(entity) && entity != gameObject)
             {
-                surroundingEntities.Add(entity);
+                entities.Add(entity);
             }
         }
-        return surroundingEntities;
+        return entities;
     }
 
+    private void EvaluateSurroundingEntities()
+    {
+        foreach (var entity in surroundingEntities)
+        {
+            Vector2 direction = entity.transform.position - _transform.position;
+            
+            // If entity is not in FOV
+            if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
+            {
+                if (seenEntities.Contains(entity))
+                {
+                    seenEntities.Remove(entity);
+                }
+                continue;
+            }
+            
+            if (!seenEntities.Contains(entity))
+            {
+                seenEntities.Add(entity);
+            }
+            
+            Debug.DrawLine(_transform.position, entity.transform.position, Color.green);
+        }
+    }
+
+    private void DoNothing()
+    {
+        if (controller.movement != null)
+        {
+            StopCoroutine(controller.movement);
+        }
+    }
+    
     private void DoMouseMode()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0))
@@ -76,6 +115,7 @@ public class EntityAI : MonoBehaviour
             controller.MoveToTarget(controller.target);
         }
     }
+    
     private void DoWandering()
     {
         if (!controller.moving)
@@ -83,11 +123,14 @@ public class EntityAI : MonoBehaviour
             controller.MoveToRandomTarget(mapArea);
         }
     }
-    
+
+    private void DoShooting()
+    {
+        
+    }
     // Called every second
     private void TickUpdate()
     {
-        testList = SurroundingEntities(senseDistance);
     }
     
     // Called every frame
@@ -98,11 +141,17 @@ public class EntityAI : MonoBehaviour
         { 
             TickUpdate();
             
-            currentTime = targetTime;
+            currentTime = tick;
         }
 
+        surroundingEntities = SurroundingEntities(viewDistance);
+        EvaluateSurroundingEntities();
+        
         switch (generalState)
         {
+            case GeneralState.Nothing:
+                DoNothing();
+                break;
             case GeneralState.MouseMode:
                 DoMouseMode();
                 break;
@@ -120,10 +169,18 @@ public class EntityAI : MonoBehaviour
 
         mapArea = new Rect(0f, 0f, controller.map.size.x - 1, controller.map.size.y - 1);
     }
-
+    
     private void OnDrawGizmos()
     {
+        _transform = transform;
+        // Sense distance
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(_transform.position, senseDistance);
+        Gizmos.DrawWireSphere(_transform.position, viewDistance);
+        
+        // Field of view
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(_transform.position, _transform.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
+        Gizmos.DrawRay(_transform.position, _transform.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
+
     }
 }

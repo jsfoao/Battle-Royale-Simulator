@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityPrefab: {fileID: 5634166467280325268, guid: e3627633ba30201438714ca997226e05, type: 3}
-  entitiesTotal: 1
+  entitiesTotal: 4
   entitiesList: []
 --- !u!4 &664954023
 Transform:
@@ -301,7 +301,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f264dac00d0803439334d9365170565, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: {x: 20, y: 20}
+  size: {x: 25, y: 25}
   offset: 1
   _tilePrefab: {fileID: 1639734968055576150, guid: 8a2b0ec902f95c6498812ee35d287502, type: 3}
 --- !u!4 &2135403923
