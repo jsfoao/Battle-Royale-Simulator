@@ -5,11 +5,11 @@ using UnityEngine;
 public class Map : MonoBehaviour
 {
     private Transform _transform;
-    [Header("Map Spawn")]
+    [Header("Map Spawn")] 
     [SerializeField] 
-    public Vector2Int size;
+    public Vector2Int size = new Vector2Int(10, 10);
     [SerializeField] 
-    public float offset;
+    public float offset = 1f;
     [SerializeField] 
     private GameObject _tilePrefab;
 

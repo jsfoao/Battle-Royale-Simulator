@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
 {
+    // G Cost: Cost of path to start tile
+    // H Cost:
+    // F Cost: 
     private const int STRAIGHT_COST = 10;
     private const int DIAGONAL_COST = 14;
     
@@ -50,7 +53,7 @@ public class Pathfinding : MonoBehaviour
 
         while (openList.Count > 0)
         {
-            // Get lowest F cost in Open List
+            // Iterate through Open List to get tile with lowest F Cost
             Tile currentTile = openList[0];
             for (int i = 1; i < openList.Count; i++)
             {
@@ -65,6 +68,7 @@ public class Pathfinding : MonoBehaviour
             openList.Remove(currentTile);
             closedList.Add(currentTile);
             
+            // If reached target tile, path was found
             if (currentTile == targetTile)
             {
                 return BacktrackPath(startTile, targetTile);
@@ -77,6 +81,7 @@ public class Pathfinding : MonoBehaviour
                     continue;
 
                 int movementCost = currentTile.gCost + TileDistanceCost(currentTile, neighbourTile);
+               
                 // Neighbour tile is possible path?
                 if (movementCost < neighbourTile.gCost || !openList.Contains(neighbourTile))
                 {
@@ -84,7 +89,8 @@ public class Pathfinding : MonoBehaviour
                     neighbourTile.gCost = movementCost;
                     startTile.hCost = TileDistanceCost(currentTile, targetTile);
                     neighbourTile.parentTile = currentTile;
-
+                    
+                    // Add neighbour tile to open list
                     if (!openList.Contains(neighbourTile))
                     {
                         openList.Add(neighbourTile);
