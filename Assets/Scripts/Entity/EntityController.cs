@@ -11,6 +11,7 @@ using Random = UnityEngine.Random;
 public class EntityController : MonoBehaviour
 {
     private GameManager _gameManager;
+    private EntityAI _entityAI;
     private Entity _entity;
     private Transform _transform;
     private Pathfinding _pathfinding;
@@ -28,6 +29,16 @@ public class EntityController : MonoBehaviour
     private float targetTime = 3f;
     private float currentTime;
 
+    public void StopMovement()
+    {
+        if (movement == null)
+        {
+            return;
+        }
+
+        moving = false;
+        StopCoroutine(movement);
+    }
     public void LookAtTarget(Vector3 target, float speed)
     {
         Vector3 direction = _transform.position - target;
@@ -86,9 +97,10 @@ public class EntityController : MonoBehaviour
 
     private void Start()
     {
-        _entity = GetComponent<Entity>();
         _transform = transform;
-        target = transform.GetChild(0);
+        target = _transform.GetChild(0);
+        _entity = GetComponent<Entity>();
+        _entityAI = GetComponent<EntityAI>();
         _gameManager = FindObjectOfType<GameManager>();
         _pathfinding = FindObjectOfType<Pathfinding>();
         map = FindObjectOfType<Map>();

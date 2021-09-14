@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.Serialization;
-using Random = UnityEngine.Random;
 
 public class EntityAI : MonoBehaviour
 {
@@ -24,6 +20,7 @@ public class EntityAI : MonoBehaviour
     // Loots
     [NonSerialized] public Dictionary<GameObject, float> surroundingLoots;
     [SerializeField] public List<GameObject> seenLoots;
+    [SerializeField] public bool pickupLoot = false;
 
     [Header("Vision Sense")] 
     [SerializeField] private float viewDistance = 25f;
@@ -103,7 +100,7 @@ public class EntityAI : MonoBehaviour
             if (!seenEntities.Contains(entity))
             {
                 seenEntities.Add(entity);
-            }
+            } 
             
             // Calculate closest seen entity
             if (surroundingEntities[entity] < minDistance && entity.CompareTag("Entity"))
@@ -167,24 +164,14 @@ public class EntityAI : MonoBehaviour
             Vector2 direction = loot.transform.position - _transform.position;
             if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
             {
-                if (seenEntities.Contains(loot))
-                {
-                    seenEntities.Remove(loot);
-                }
                 continue;
             }
-            if (!seenEntities.Contains(loot))
-            {
-                seenEntities.Add(loot);
-            }
-            
             // Calculate closest seen loot
             if (surroundingLoots[loot] < minDistance && loot.CompareTag("Loot"))
             {
                 closestSeenLoot = loot;
                 minDistance = surroundingLoots[loot];
             }
-            
             Debug.DrawLine(_transform.position, loot.transform.position, Color.magenta);
         }
     }
@@ -192,10 +179,6 @@ public class EntityAI : MonoBehaviour
     
     private void DoNothing()
     {
-        if (controller.movement != null)
-        {
-            StopCoroutine(controller.movement);
-        }
     }
     
     private void DoMouseMode()
@@ -227,6 +210,7 @@ public class EntityAI : MonoBehaviour
             controller.MoveToTarget(closestSeenLoot.transform);
         }
     }
+    
     private void DoShooting()
     {
         
@@ -235,25 +219,27 @@ public class EntityAI : MonoBehaviour
     // Called every second
     private void TickUpdate()
     {
-        SurroundingEntities(viewDistance);
-        SurroundingLoots(viewDistance);
     }
     
     // Called every frame
     private void Update()
     {
-        currentTime -= Time.deltaTime;
-        if (currentTime <= 0)
-        { 
-            TickUpdate();
-            
-            currentTime = tick;
-        }
+        // currentTime -= Time.deltaTime;
+        // if (currentTime <= 0)
+        // { 
+        //     TickUpdate();
+        //     
+        //     currentTime = tick;
+        // }
+        
+        SurroundingEntities(viewDistance);
+        SurroundingLoots(viewDistance);
         
         switch (generalState)
         {
             case GeneralState.Nothing:
                 DoNothing();
+                controller.StopMovement();
                 break;
             
             case GeneralState.MouseMode:
@@ -262,12 +248,24 @@ public class EntityAI : MonoBehaviour
             
             case GeneralState.Wandering:
                 DoWandering();
-                if (closestSeenLoot != null) { generalState = GeneralState.Looting; }
+                
+                // Wandering to Looting
+                if (closestSeenLoot != null)
+                {
+                    controller.StopMovement();
+                    generalState = GeneralState.Looting;
+                }
                 break;
             
             case GeneralState.Looting:
                 DoLooting();
-                if (closestSeenLoot == null) { generalState = GeneralState.Wandering; }
+                
+                // Looting to Wandering
+                if (closestSeenLoot == null)
+                {
+                    controller.StopMovement();
+                    generalState = GeneralState.Wandering;
+                }
                 break;
         }
     }
@@ -284,6 +282,11 @@ public class EntityAI : MonoBehaviour
     private void OnDrawGizmos()
     {
         _transform = transform;
+        
+        // Sense touch
+        // Gizmos.color = Color.yellow;
+        // Gizmos.DrawWireSphere(_transform.position, proximityRange);
+        
         // Sense distance
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(_transform.position, viewDistance);

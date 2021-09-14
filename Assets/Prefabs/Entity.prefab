@@ -306,9 +306,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08500721ecccea14eaa0df20a6bda511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tick: 0.5
+  tick: 0.1
   seenEntities: []
   seenLoots: []
+  proximityRange: 0
   viewDistance: 20
   fieldOfView: 20
   closestSeenEntity: {fileID: 0}
