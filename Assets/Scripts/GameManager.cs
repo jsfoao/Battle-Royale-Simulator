@@ -1,31 +1,42 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Spawner")]
+    [Header("Entity Spawner")]
     [SerializeField] private GameObject entityPrefab;
     [SerializeField] private int entitiesTotal = 2;
     public List<GameObject> entitiesList;
 
+    [Header("Loot Spawner")] 
+    [SerializeField] private GameObject lootPrefab;
+    [SerializeField] private int lootTotal = 2;
+    public List<GameObject> lootList;
+
     private Map _map;
 
-    private void DestroyEntity(GameObject entity)
+    public void DestroyEntity(GameObject entity)
     {
         entitiesList.Remove(entity);
         Destroy(entity);
     }
-    
-    private void SpawnEntity(Vector3 location)
+
+    public void SpawnEntity(Vector3 location)
     {
         var entity= Instantiate(entityPrefab, location, Quaternion.identity);
-        entity.transform.SetParent(transform);
+        entity.transform.SetParent(transform.GetChild(0));
         entitiesList.Add(entity);
     }
 
+    public void SpawnLoot(Vector3 location)
+    {
+        var loot= Instantiate(lootPrefab, location, Quaternion.identity);
+        loot.transform.SetParent(transform.GetChild(1));
+        lootList.Add(loot);
+    }
+
+    // Generates random Vector3 bound by map world size
     private Vector3 RandomLocation()
     {
         Vector3 result;
@@ -42,6 +53,11 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < entitiesTotal; i++)
         {
             SpawnEntity(RandomLocation());
+        }
+
+        for (int i = 0; i < lootTotal; i++)
+        {
+            SpawnLoot(RandomLocation());
         }
     }
 }

@@ -5,16 +5,20 @@ using System.Data.Common;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 public class EntityController : MonoBehaviour
 {
+    private GameManager _gameManager;
+    private Entity _entity;
     private Transform _transform;
     private Pathfinding _pathfinding;
     [NonSerialized] public Map map;
     private List<Tile> currentPath;
     [NonSerialized] public Transform target;
-    
+
+    [SerializeField] public float pickupRange = 1f;
     [SerializeField] private float sprintSpeed = 0.05f;
     [SerializeField] private float walkSpeed = 0.02f;
     
@@ -23,15 +27,22 @@ public class EntityController : MonoBehaviour
     public bool moving;
     private float targetTime = 3f;
     private float currentTime;
-    
-    // Moves to random target in designated area
+
+    public void LookAtTarget(Vector3 target, float speed)
+    {
+        Vector3 direction = _transform.position - target;
+        _transform.right = Vector3.Lerp(_transform.right, -direction, Time.deltaTime * speed);
+    }
+
     public void MoveToRandomTarget(Rect area)
     {
+        // Randomizes target in area
         target.position = new Vector3(Random.Range(area.xMin, area.xMax), Random.Range(area.yMin, area.yMax),
             0f);
         
         if (map.TileFromWorldPosition(target.position).walkable == false) { return; }
 
+        // Will move to target if it's walkable
         MoveToTarget(target);
     }
     
@@ -45,12 +56,6 @@ public class EntityController : MonoBehaviour
         movement = StartCoroutine(MoveAlongPath(currentPath));
     }
     
-    public void LookAtTarget(Vector3 target, float speed)
-    {
-        Vector3 direction = _transform.position - target;
-        _transform.right = Vector3.Lerp(_transform.right, -direction, Time.deltaTime * speed);
-    }
-
     public IEnumerator MoveAlongPath(List<Tile> tilePath)
     {
         int pathIndex = 0;
@@ -81,8 +86,10 @@ public class EntityController : MonoBehaviour
 
     private void Start()
     {
+        _entity = GetComponent<Entity>();
         _transform = transform;
         target = transform.GetChild(0);
+        _gameManager = FindObjectOfType<GameManager>();
         _pathfinding = FindObjectOfType<Pathfinding>();
         map = FindObjectOfType<Map>();
     }
@@ -90,7 +97,6 @@ public class EntityController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.black;
-
         if (currentPath != null)
         {
             foreach (Tile tile in currentPath)

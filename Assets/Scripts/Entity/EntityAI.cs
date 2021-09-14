@@ -17,13 +17,20 @@ public class EntityAI : MonoBehaviour
     private float currentTime;
 
     [Header("Distance Sense")]
-    [SerializeField] private List<GameObject> surroundingEntities;
+    // Entities
+    [NonSerialized] private Dictionary<GameObject, float> surroundingEntities;
     [SerializeField] private List<GameObject> seenEntities;
+    
+    // Loots
+    [NonSerialized] public Dictionary<GameObject, float> surroundingLoots;
+    [SerializeField] public List<GameObject> seenLoots;
 
     [Header("Vision Sense")] 
     [SerializeField] private float viewDistance = 25f;
     [SerializeField] [Range(0, 90)]
     private float fieldOfView = 20f;
+    [SerializeField] private GameObject closestSeenEntity;
+    [SerializeField] private GameObject closestSeenLoot;
 
     [Header("State Machine")]
     [SerializeField] private GeneralState generalState = GeneralState.Wandering;
@@ -37,45 +44,54 @@ public class EntityAI : MonoBehaviour
         Nothing,
         MouseMode,
         Wandering,
+        Looting,
         Shooting
     }
 
-    private List<GameObject> SurroundingEntities(float range)
+    #region Entities
+    // EVALUATE ENTITIES
+    private void SurroundingEntities(float range)
     {
         if (gameManager.entitiesList == null || gameManager.entitiesList.Count == 0)
         {
-            return null;
+            return;
         }
         
-        // Check if there are any entities in range of player
-        List<GameObject> entities = new List<GameObject>();
+        Dictionary<GameObject, float> entities = new Dictionary<GameObject, float>();
+        
         foreach (var entity in gameManager.entitiesList)
         {
             float distance = (entity.transform.position - _transform.position).magnitude;
+            
+            // Return and remove from surroundingEntities if not in range of player
             if (distance > range)
             {
-                if (entities.Contains(entity))
+                if (entities.ContainsKey(entity))
                 {
                     entities.Remove(entity);
                 }
                 continue;
             }
 
-            if (!entities.Contains(entity) && entity != gameObject)
+            // Entity is in range of player
+            if (!entities.ContainsKey(entity) && entity != gameObject)
             {
-                entities.Add(entity);
+                entities.Add(entity, distance);
             }
         }
-        return entities;
+
+        surroundingEntities = entities;
+        EvaluateSurroundingEntities();
     }
 
     private void EvaluateSurroundingEntities()
     {
-        foreach (var entity in surroundingEntities)
+        float minDistance = Int32.MaxValue;
+
+        foreach (var entity in surroundingEntities.Keys)
         {
+            // Check if entity is in FOV
             Vector2 direction = entity.transform.position - _transform.position;
-            
-            // If entity is not in FOV
             if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
             {
                 if (seenEntities.Contains(entity))
@@ -84,16 +100,96 @@ public class EntityAI : MonoBehaviour
                 }
                 continue;
             }
-            
             if (!seenEntities.Contains(entity))
             {
                 seenEntities.Add(entity);
             }
             
+            // Calculate closest seen entity
+            if (surroundingEntities[entity] < minDistance && entity.CompareTag("Entity"))
+            {
+                closestSeenEntity = entity;
+                minDistance = surroundingEntities[entity];
+            }
+            
             Debug.DrawLine(_transform.position, entity.transform.position, Color.green);
         }
     }
+    #endregion
 
+    #region Loot
+    private void SurroundingLoots(float range)
+    {
+        if (gameManager.lootList == null || gameManager.lootList.Count == 0)
+        {
+            return;
+        }
+        
+        Dictionary<GameObject, float> loots = new Dictionary<GameObject, float>();
+        
+        foreach (var loot in gameManager.lootList)
+        {
+            if (loot == null)
+            {
+                continue;
+            }
+            
+            float distance = (loot.transform.position - _transform.position).magnitude;
+            
+            // Return and remove from surroundingLoots if not in range of player
+            if (distance > range)
+            {
+                if (loots.ContainsKey(loot))
+                {
+                    loots.Remove(loot);
+                }
+                continue;
+            }
+
+            // Entity is in range of player
+            if (!loots.ContainsKey(loot))
+            {
+                loots.Add(loot, distance);
+            }
+        }
+
+        surroundingLoots = loots;
+        EvaluateSurroundingLoots();
+    }
+    
+    private void EvaluateSurroundingLoots()
+    {
+        float minDistance = Int32.MaxValue;
+    
+        foreach (var loot in surroundingLoots.Keys)
+        {
+            // Check if loot is in FOV
+            Vector2 direction = loot.transform.position - _transform.position;
+            if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
+            {
+                if (seenEntities.Contains(loot))
+                {
+                    seenEntities.Remove(loot);
+                }
+                continue;
+            }
+            if (!seenEntities.Contains(loot))
+            {
+                seenEntities.Add(loot);
+            }
+            
+            // Calculate closest seen loot
+            if (surroundingLoots[loot] < minDistance && loot.CompareTag("Loot"))
+            {
+                closestSeenLoot = loot;
+                minDistance = surroundingLoots[loot];
+            }
+            
+            Debug.DrawLine(_transform.position, loot.transform.position, Color.magenta);
+        }
+    }
+    #endregion
+    
     private void DoNothing()
     {
         if (controller.movement != null)
@@ -124,13 +220,23 @@ public class EntityAI : MonoBehaviour
         }
     }
 
+    private void DoLooting()
+    {
+        if (!controller.moving && closestSeenLoot != null)
+        {
+            controller.MoveToTarget(closestSeenLoot.transform);
+        }
+    }
     private void DoShooting()
     {
         
     }
+    
     // Called every second
     private void TickUpdate()
     {
+        SurroundingEntities(viewDistance);
+        SurroundingLoots(viewDistance);
     }
     
     // Called every frame
@@ -143,20 +249,25 @@ public class EntityAI : MonoBehaviour
             
             currentTime = tick;
         }
-
-        surroundingEntities = SurroundingEntities(viewDistance);
-        EvaluateSurroundingEntities();
         
         switch (generalState)
         {
             case GeneralState.Nothing:
                 DoNothing();
                 break;
+            
             case GeneralState.MouseMode:
                 DoMouseMode();
                 break;
+            
             case GeneralState.Wandering:
                 DoWandering();
+                if (closestSeenLoot != null) { generalState = GeneralState.Looting; }
+                break;
+            
+            case GeneralState.Looting:
+                DoLooting();
+                if (closestSeenLoot == null) { generalState = GeneralState.Wandering; }
                 break;
         }
     }
@@ -166,7 +277,7 @@ public class EntityAI : MonoBehaviour
         _transform = transform;
         controller = GetComponent<EntityController>();
         gameManager = FindObjectOfType<GameManager>();
-
+        currentTime = tick;
         mapArea = new Rect(0f, 0f, controller.map.size.x - 1, controller.map.size.y - 1);
     }
     

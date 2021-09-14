@@ -240,7 +240,7 @@ GameObject:
   - component: {fileID: 633466900864567575}
   m_Layer: 0
   m_Name: Entity
-  m_TagString: Player
+  m_TagString: Entity
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -273,8 +273,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fee2e0d3c11e0fb4ba302af28f3e3a62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: 
   health: 0
   loot: 0
+  range: 0
 --- !u!114 &7050706438821605243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -287,7 +289,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 053e6d63b254dfc4fbebe66d93f5121a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0.03
+  pickupRange: 3
+  sprintSpeed: 0.05
+  walkSpeed: 0.02
   rotationSpeed: 8
   moving: 0
 --- !u!114 &633466900864567575
@@ -302,10 +306,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08500721ecccea14eaa0df20a6bda511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tick: 0.1
-  senseDistance: 20
-  surroundingEntities: []
+  tick: 0.5
   seenEntities: []
+  seenLoots: []
+  viewDistance: 20
   fieldOfView: 20
+  closestSeenEntity: {fileID: 0}
+  closestSeenLoot: {fileID: 0}
   generalState: 2
-  actionState: 0

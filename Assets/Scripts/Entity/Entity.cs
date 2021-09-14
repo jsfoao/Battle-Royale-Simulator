@@ -14,4 +14,9 @@ public class Entity : MonoBehaviour
     public int Health { get => health; set => health = value; }
     public int Loot { get => loot; set => loot = value; }
     public float Range { get => range; set => range = value; }
+
+    public void AddLoot()
+    {
+        Loot += 1;
+    }
 }
