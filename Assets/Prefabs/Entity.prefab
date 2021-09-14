@@ -238,6 +238,7 @@ GameObject:
   - component: {fileID: 7822314696808140366}
   - component: {fileID: 7050706438821605243}
   - component: {fileID: 633466900864567575}
+  - component: {fileID: 2898336022789703790}
   m_Layer: 0
   m_Name: Entity
   m_TagString: Entity
@@ -274,7 +275,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   name: 
-  health: 0
+  health: 100
   loot: 0
   range: 0
 --- !u!114 &7050706438821605243
@@ -293,7 +294,6 @@ MonoBehaviour:
   sprintSpeed: 0.05
   walkSpeed: 0.02
   rotationSpeed: 8
-  moving: 0
 --- !u!114 &633466900864567575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -307,11 +307,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tick: 0.1
-  seenEntities: []
-  seenLoots: []
-  proximityRange: 0
   viewDistance: 20
   fieldOfView: 20
-  closestSeenEntity: {fileID: 0}
-  closestSeenLoot: {fileID: 0}
   generalState: 2
+--- !u!114 &2898336022789703790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5634166467280325268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fd418b06543bb741952468df115ec96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireRate: 1
+  currentTime: 0
+  damage: 10

@@ -11,7 +11,7 @@ public class Loot : MonoBehaviour
 
     private void DestroyLoot()
     {
-        _gameManager.entitiesList.Remove(gameObject);
+        _gameManager.lootList.Remove(gameObject);
         Destroy(gameObject);
     }
     
@@ -28,7 +28,6 @@ public class Loot : MonoBehaviour
                 if (entityAI.surroundingLoots != null)
                 {
                     entityAI.surroundingLoots.Remove(gameObject);
-                    entityAI.seenLoots.Remove(gameObject);
                     entity.AddLoot();
                     OnPickup.Invoke();
                 }

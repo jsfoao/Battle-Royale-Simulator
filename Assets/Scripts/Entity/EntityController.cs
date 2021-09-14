@@ -25,10 +25,16 @@ public class EntityController : MonoBehaviour
     
     [SerializeField] private float rotationSpeed = 8f;
     public Coroutine movement;
-    public bool moving;
+    [NonSerialized] public bool moving;
     private float targetTime = 3f;
     private float currentTime;
 
+    public void DestroyEntity()
+    {
+        _gameManager.entitiesList.Remove(gameObject);
+        Destroy(gameObject);
+    }
+    
     public void StopMovement()
     {
         if (movement == null)

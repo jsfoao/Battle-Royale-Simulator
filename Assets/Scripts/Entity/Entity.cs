@@ -19,4 +19,12 @@ public class Entity : MonoBehaviour
     {
         Loot += 1;
     }
+    
+    private void Update()
+    {
+        if (Health <= 0)
+        {
+            GetComponent<EntityController>().DestroyEntity();
+        }
+    }
 }
