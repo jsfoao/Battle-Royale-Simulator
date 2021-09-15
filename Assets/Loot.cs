@@ -11,7 +11,7 @@ public class Loot : MonoBehaviour
 
     private void DestroyLoot()
     {
-        _gameManager.lootList.Remove(gameObject);
+        _gameManager.lootsList.Remove(gameObject);
         Destroy(gameObject);
     }
     
@@ -23,14 +23,9 @@ public class Loot : MonoBehaviour
             if (distance <= pickupRange)
             {
                 Entity entity = entityObject.GetComponent<Entity>();
-                EntityAI entityAI = entityObject.GetComponent<EntityAI>();
-
-                if (entityAI.surroundingLoots != null)
-                {
-                    entityAI.surroundingLoots.Remove(gameObject);
-                    entity.AddLoot();
-                    OnPickup.Invoke();
-                }
+                
+                entity.AddLoot();
+                OnPickup.Invoke();
             }
         }
     }

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
+using Random = UnityEngine.Random;
 
 public class EntityAI : MonoBehaviour
 {
     private Transform _transform;
+    private Transform _transformModel;
     private  GameManager gameManager;
     private EntityController controller;
     private Shooting _shooting;
@@ -16,17 +19,17 @@ public class EntityAI : MonoBehaviour
 
     [Header("Distance Sense")]
     // Entities
-    [NonSerialized] private Dictionary<GameObject, float> surroundingEntities;
+    [NonSerialized] private List<GameObject> seenEntities;
     
     // Loots
-    [NonSerialized] public Dictionary<GameObject, float> surroundingLoots;
+    [NonSerialized] private List<GameObject> seenLoots;
 
     [Header("Vision Sense")] 
     [SerializeField] private float viewDistance = 25f;
     [SerializeField] [Range(0, 90)]
     private float fieldOfView = 20f;
-    [NonSerialized] private GameObject closestSeenEntity;
-    [NonSerialized] private GameObject closestSeenLoot;
+    [SerializeField] private GameObject closestSeenEntity;
+    [SerializeField] private GameObject closestSeenLoot;
 
     [Header("State Machine")]
     [SerializeField] private GeneralState generalState = GeneralState.Wandering;
@@ -43,149 +46,81 @@ public class EntityAI : MonoBehaviour
         Looting,
         Shooting
     }
-
-    #region Entities
-    // EVALUATE ENTITIES
-    private void SurroundingEntities(float range)
+    
+    private List<GameObject> SeenInList(List<GameObject> list, GameObject closestObject)
     {
-        if (gameManager.entitiesList == null || gameManager.entitiesList.Count == 0)
+        if (list == null || list.Count == 0)
         {
-            return;
-        }
-        
-        Dictionary<GameObject, float> entities = new Dictionary<GameObject, float>();
-        
-        foreach (var entity in gameManager.entitiesList)
-        {
-            float distance = (entity.transform.position - _transform.position).magnitude;
-            
-            // Return and remove from surroundingEntities if not in range of player
-            if (distance > range)
-            {
-                if (entities.ContainsKey(entity))
-                {
-                    entities.Remove(entity);
-                }
-                continue;
-            }
-
-            // Entity is in range of player
-            if (!entities.ContainsKey(entity) && entity != gameObject)
-            {
-                entities.Add(entity, distance);
-            }
+            return null;
         }
 
-        surroundingEntities = entities;
-        EvaluateSurroundingEntities();
-    }
-
-    private void EvaluateSurroundingEntities()
-    {
+        List<GameObject> seenList = new List<GameObject>();
         float minDistance = Int32.MaxValue;
-
-        foreach (var entity in surroundingEntities.Keys)
-        {
-            // Check if entity is in FOV
-            Vector2 direction = entity.transform.position - _transform.position;
-            if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
-            {
-                continue;
-            }
-            // Calculate closest seen entity
-            if (surroundingEntities[entity] < minDistance && entity.CompareTag("Entity"))
-            {
-                closestSeenEntity = entity;
-                minDistance = surroundingEntities[entity];
-            }
-            Debug.DrawLine(_transform.position, entity.transform.position, Color.green);
-        }
-    }
-    #endregion
-
-    #region Loot
-    private void SurroundingLoots(float range)
-    {
-        if (gameManager.lootList == null || gameManager.lootList.Count == 0)
-        {
-            return;
-        }
         
-        Dictionary<GameObject, float> loots = new Dictionary<GameObject, float>();
-        
-        foreach (var loot in gameManager.lootList)
+        foreach (var worldObject in list)
         {
-            if (loot == null)
+            Vector2 direction = worldObject.transform.position - _transform.position;
+            float distance = direction.magnitude;
+            
+            // If not in range of player
+            if (distance > viewDistance)
             {
                 continue;
             }
             
-            float distance = (loot.transform.position - _transform.position).magnitude;
-            
-            // Return and remove from surroundingLoots if not in range of player
-            if (distance > range)
+            // If not in FOV
+            if (!(Vector2.Angle(_transformModel.right, direction) <= 90f - fieldOfView))
             {
-                if (loots.ContainsKey(loot))
+                continue;
+            }
+            
+            // If closest seen entity
+            if (direction.magnitude < minDistance)
+            {
+                if (worldObject != gameObject)
                 {
-                    loots.Remove(loot);
+                    if (worldObject.CompareTag("Entity"))
+                    {
+                        closestSeenEntity = worldObject;
+                    }
+
+                    if (worldObject.CompareTag("Loot"))
+                    {
+                        closestSeenLoot = worldObject;
+                    }
+                    minDistance = direction.magnitude;
                 }
-                continue;
             }
 
-            // Entity is in range of player
-            if (!loots.ContainsKey(loot))
-            {
-                loots.Add(loot, distance);
-            }
+            Debug.DrawLine(_transform.position, worldObject.transform.position, Color.green);
         }
 
-        surroundingLoots = loots;
-        EvaluateSurroundingLoots();
+        return seenList;
     }
-    
-    private void EvaluateSurroundingLoots()
-    {
-        float minDistance = Int32.MaxValue;
-    
-        foreach (var loot in surroundingLoots.Keys)
-        {
-            // Check if loot is in FOV
-            Vector2 direction = loot.transform.position - _transform.position;
-            if (!(Vector2.Angle(_transform.right, direction) <= 90f - fieldOfView))
-            {
-                continue;
-            }
-            // Calculate closest seen loot
-            if (surroundingLoots[loot] < minDistance && loot.CompareTag("Loot"))
-            {
-                closestSeenLoot = loot;
-                minDistance = surroundingLoots[loot];
-            }
-            Debug.DrawLine(_transform.position, loot.transform.position, Color.magenta);
-        }
-    }
-    #endregion
-    
+
     private void DoNothing()
     {
     }
     
     private void DoMouseMode()
     {
+        _shooting.AimToTarget(closestSeenEntity);
+
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            controller.target.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            controller.target.position = new Vector3(controller.target.position.x, controller.target.position.y, 0f);
+            controller.moveTarget.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            controller.moveTarget.position = new Vector3(controller.moveTarget.position.x, controller.moveTarget.position.y, 0f);
 
-            if (controller.target.position.x > controller.map.worldSize.x || controller.target.position.x < 0f) { return; }
-            if (controller.target.position.y > controller.map.worldSize.y || controller.target.position.y < 0f) { return; }
+            if (controller.moveTarget.position.x > controller.map.worldSize.x || controller.moveTarget.position.x < 0f) { return; }
+            if (controller.moveTarget.position.y > controller.map.worldSize.y || controller.moveTarget.position.y < 0f) { return; }
             
-            controller.MoveToTarget(controller.target);
+            controller.MoveToTarget(controller.moveTarget);
         }
     }
     
     private void DoWandering()
     {
+        _shooting.AimToTarget(controller.moveTarget.gameObject);
         if (!controller.moving)
         {
             controller.MoveToRandomTarget(mapArea);
@@ -194,6 +129,7 @@ public class EntityAI : MonoBehaviour
 
     private void DoLooting()
     {
+        _shooting.AimToTarget(closestSeenLoot);
         if (!controller.moving && closestSeenLoot != null)
         {
             controller.MoveToTarget(closestSeenLoot.transform);
@@ -202,20 +138,21 @@ public class EntityAI : MonoBehaviour
     
     private void DoShooting()
     {
-        _shooting.currentTime -= Time.deltaTime;
-        if (_shooting.currentTime <= 0)
-        {
-            _shooting.Shoot(closestSeenEntity);
-            
-            _shooting.currentTime = _shooting.fireRate;
-        }
+        _shooting.AimToTarget(closestSeenEntity);
+        // _shooting.currentTime -= Time.deltaTime;
+        // if (_shooting.currentTime <= 0)
+        // {
+        //     _shooting.Shoot(closestSeenEntity);
+        //     
+        //     _shooting.currentTime = _shooting.fireRate;
+        // }
     }
     
     // Called every second
     private void TickUpdate()
     {
-        SurroundingEntities(viewDistance);
-        SurroundingLoots(viewDistance);
+        //seenEntities = SeenInList(gameManager.entitiesList, closestSeenEntity);
+        seenLoots = SeenInList(gameManager.lootsList, closestSeenLoot);
     }
     
     // Called every frame
@@ -233,7 +170,13 @@ public class EntityAI : MonoBehaviour
         {
             case GeneralState.Nothing:
                 DoNothing();
-                controller.StopMovement();
+                
+                // // Nothing to Shooting
+                // if (closestSeenEntity != null)
+                // {
+                //     controller.StopMovement();
+                //     generalState = GeneralState.Shooting;
+                // }
                 break;
             
             case GeneralState.MouseMode:
@@ -250,12 +193,12 @@ public class EntityAI : MonoBehaviour
                     generalState = GeneralState.Looting;
                 }
                 
-                // Wandering to Shooting
-                if (closestSeenEntity != null)
-                {
-                    controller.StopMovement();
-                    generalState = GeneralState.Shooting;
-                }
+                // // Wandering to Shooting
+                // if (closestSeenEntity != null)
+                // {
+                //     controller.StopMovement();
+                //     generalState = GeneralState.Shooting;
+                // }
                 break;
             
             case GeneralState.Looting:
@@ -268,12 +211,12 @@ public class EntityAI : MonoBehaviour
                     generalState = GeneralState.Wandering;
                 }
                 
-                // Looting to Shooting
-                if (closestSeenEntity != null)
-                {
-                    controller.StopMovement();
-                    generalState = GeneralState.Shooting;
-                }
+                // // Looting to Shooting
+                // if (closestSeenEntity != null)
+                // {
+                //     controller.StopMovement();
+                //     generalState = GeneralState.Shooting;
+                // }
                 break;
             
             case GeneralState.Shooting:
@@ -292,6 +235,7 @@ public class EntityAI : MonoBehaviour
     private void Start()
     {
         _transform = transform;
+        _transformModel = transform.Find("Model");
         controller = GetComponent<EntityController>();
         _shooting = GetComponent<Shooting>();
         gameManager = FindObjectOfType<GameManager>();
@@ -302,7 +246,7 @@ public class EntityAI : MonoBehaviour
     private void OnDrawGizmos()
     {
         _transform = transform;
-        
+        _transformModel = transform.Find("Model");
         // Sense touch
         // Gizmos.color = Color.yellow;
         // Gizmos.DrawWireSphere(_transform.position, proximityRange);
@@ -313,8 +257,8 @@ public class EntityAI : MonoBehaviour
         
         // Field of view
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(_transform.position, _transform.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
-        Gizmos.DrawRay(_transform.position, _transform.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
+        Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
+        Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
 
     }
 }

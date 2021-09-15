@@ -255,11 +255,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityPrefab: {fileID: 5634166467280325268, guid: e3627633ba30201438714ca997226e05, type: 3}
-  entitiesTotal: 10
+  entitiesTotal: 3
   entitiesList: []
   lootPrefab: {fileID: 5048309848263699149, guid: 2b3f00bf92acd6440918170b7583db31, type: 3}
-  lootTotal: 20
-  lootList: []
+  lootTotal: 50
+  lootsList: []
 --- !u!4 &664954023
 Transform:
   m_ObjectHideFlags: 0
@@ -268,7 +268,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 664954021}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -22.841164, y: 19.229698, z: -19.28459}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1134218711}

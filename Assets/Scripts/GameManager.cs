@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     [Header("Loot Spawner")] 
     [SerializeField] private GameObject lootPrefab;
     [SerializeField] private int lootTotal = 2;
-    public List<GameObject> lootList;
+    public List<GameObject> lootsList;
 
     private Map _map;
 
@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
     {
         var loot= Instantiate(lootPrefab, location, Quaternion.identity);
         loot.transform.SetParent(transform.GetChild(1));
-        lootList.Add(loot);
+        lootsList.Add(loot);
     }
 
     // Generates random Vector3 bound by map world size

@@ -1,11 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
-using TMPro;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 public class EntityController : MonoBehaviour
@@ -14,10 +10,12 @@ public class EntityController : MonoBehaviour
     private EntityAI _entityAI;
     private Entity _entity;
     private Transform _transform;
+    private Transform _transformModel;
     private Pathfinding _pathfinding;
     [NonSerialized] public Map map;
     private List<Tile> currentPath;
-    [NonSerialized] public Transform target;
+    [NonSerialized] public Transform moveTarget;
+    [NonSerialized] public Transform aimTarget;
 
     [SerializeField] public float pickupRange = 1f;
     [SerializeField] private float sprintSpeed = 0.05f;
@@ -45,24 +43,41 @@ public class EntityController : MonoBehaviour
         moving = false;
         StopCoroutine(movement);
     }
+    
     public void LookAtTarget(Vector3 target, float speed)
     {
-        Vector3 direction = _transform.position - target;
-        _transform.right = Vector3.Lerp(_transform.right, -direction, Time.deltaTime * speed);
+        Vector3 direction = target - transform.position;
+        _transformModel.right = Vector3.Lerp(_transformModel.right, direction, Time.deltaTime * speed);
     }
 
     public void MoveToRandomTarget(Rect area)
     {
-        // Randomizes target in area
-        target.position = new Vector3(Random.Range(area.xMin, area.xMax), Random.Range(area.yMin, area.yMax),
+        // Randomizes target in area (square)
+        moveTarget.position = new Vector3(Random.Range(area.xMin, area.xMax), Random.Range(area.yMin, area.yMax),
             0f);
         
-        if (map.TileFromWorldPosition(target.position).walkable == false) { return; }
-
-        // Will move to target if it's walkable
-        MoveToTarget(target);
+        if (map.TileFromWorldPosition(moveTarget.position).walkable == false) { return; }
+        if (moveTarget.position.x < 0 || moveTarget.position.x > map.size.x) { return; }
+        if (moveTarget.position.y < 0 || moveTarget.position.y > map.size.y) { return; }
+        
+        // Will move to target if it's walkable and inside map
+        MoveToTarget(moveTarget);
     }
-    
+
+    public void MoveToRandomTarget(Vector3 center, float radius)
+    {
+        // Randomizes target in area (circle)
+        Vector3 randomVec = new Vector3(Random.Range(0f, radius), Random.Range(0f, radius), 0f);
+        moveTarget.position = center + randomVec;
+        
+        if (map.TileFromWorldPosition(moveTarget.position).walkable == false) { return; }
+        if (moveTarget.position.x < 0 || moveTarget.position.x > map.size.x) { return; }
+        if (moveTarget.position.y < 0 || moveTarget.position.y > map.size.y) { return; }
+        
+        // Will move to target if it's walkable and inside map
+        MoveToTarget(moveTarget);
+    }
+
     public void MoveToTarget(Transform target)
     {
         if (movement != null) { StopCoroutine(movement); }
@@ -72,8 +87,8 @@ public class EntityController : MonoBehaviour
         currentPath = _pathfinding.FindPath(_transform.position, target.position);
         movement = StartCoroutine(MoveAlongPath(currentPath));
     }
-    
-    public IEnumerator MoveAlongPath(List<Tile> tilePath)
+
+    private IEnumerator MoveAlongPath(List<Tile> tilePath)
     {
         int pathIndex = 0;
         Vector3 currentTarget = tilePath[pathIndex].worldPosition;
@@ -91,20 +106,24 @@ public class EntityController : MonoBehaviour
 
                 currentTarget = tilePath[pathIndex].worldPosition;
             }
-            
-            // Rotate to moving direction
-            LookAtTarget(currentTarget, rotationSpeed);
-            
+
             _transform.position = Vector2.MoveTowards(_transform.position, currentTarget, sprintSpeed);
             
             yield return null;
         }
     }
 
+    private void Update()
+    {
+        LookAtTarget(aimTarget.position, rotationSpeed);
+    }
+
     private void Start()
     {
         _transform = transform;
-        target = _transform.GetChild(0);
+        _transformModel = transform.Find("Model");
+        moveTarget = _transform.Find("MoveTarget");
+        aimTarget = _transform.Find("AimTarget");
         _entity = GetComponent<Entity>();
         _entityAI = GetComponent<EntityAI>();
         _gameManager = FindObjectOfType<GameManager>();
@@ -123,5 +142,8 @@ public class EntityController : MonoBehaviour
                     new Vector3(.3f, .3f, .3f));
             }
         }
+        aimTarget = transform.Find("AimTarget");
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(aimTarget.position, 1f);
     }
 }
