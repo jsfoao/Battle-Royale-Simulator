@@ -134,6 +134,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: MainCamera
       objectReference: {fileID: 0}
+    - target: {fileID: 3401245782014162494, guid: d5fdffee23d21c548b3380ec688b63e5, type: 3}
+      propertyPath: m_BackGroundColor.b
+      value: 0.122641504
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401245782014162494, guid: d5fdffee23d21c548b3380ec688b63e5, type: 3}
+      propertyPath: m_BackGroundColor.g
+      value: 0.122641504
+      objectReference: {fileID: 0}
+    - target: {fileID: 3401245782014162494, guid: d5fdffee23d21c548b3380ec688b63e5, type: 3}
+      propertyPath: m_BackGroundColor.r
+      value: 0.122641504
+      objectReference: {fileID: 0}
     - target: {fileID: 3401245782014162495, guid: d5fdffee23d21c548b3380ec688b63e5, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -195,6 +207,14 @@ PrefabInstance:
       propertyPath: size.y
       value: 40
       objectReference: {fileID: 0}
+    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
+      propertyPath: _halfwallWeight
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
+      propertyPath: tilePrefabs.Array.data[2]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 5633775892126971610, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
       propertyPath: m_Name
       value: Map
@@ -254,11 +274,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
       propertyPath: lootTotal
-      value: 20
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
       propertyPath: entitiesTotal
-      value: 3
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 6983834150567398429, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
       propertyPath: m_RootOrder

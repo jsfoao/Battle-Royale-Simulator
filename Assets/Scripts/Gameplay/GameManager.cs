@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -46,12 +47,13 @@ public class GameManager : MonoBehaviour
     }
 
     // Generates random Vector3 bound by map world size
-    private Vector3 RandomLocation()
+    private Vector3 RandomPosition()
     {
         Vector3 result;
         result.x = Random.Range(0f, _map.worldSize.x);
         result.y = Random.Range(0f, _map.worldSize.y);
         result.z = 0f;
+
         return result;
     }
     
@@ -59,14 +61,38 @@ public class GameManager : MonoBehaviour
     {
         _map = FindObjectOfType<Map>();
         
-        for (int i = 0; i < entitiesTotal; i++)
+        // Spawn entities
+        for (int i = 0; i <= entitiesTotal; i++)
         {
-            SpawnEntity(RandomLocation());
+            bool entitySpawned = false;
+            if (i == entitiesTotal) { return; }
+
+            while (!entitySpawned)
+            {
+                Vector3 position = RandomPosition();
+                if (_map.TileFromWorldPosition(position).walkable)
+                {
+                    entitySpawned = true;
+                    SpawnEntity(position);
+                }
+            }
         }
 
-        for (int i = 0; i < lootTotal; i++)
+        // Spawn loots
+        for (int i = 0; i <= lootTotal; i++)
         {
-            SpawnLoot(RandomLocation());
+            bool lootSpawned = false;
+            if (i == entitiesTotal) { return; }
+
+            while (!lootSpawned)
+            {
+                Vector3 position = RandomPosition();
+                if (_map.TileFromWorldPosition(position).walkable)
+                {
+                    lootSpawned = true;
+                    SpawnLoot(position);
+                }
+            }
         }
     }
 }

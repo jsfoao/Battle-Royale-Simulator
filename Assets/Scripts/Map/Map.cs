@@ -1,23 +1,26 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Map : MonoBehaviour
 {
     private Transform _transform;
     [Header("Map Spawn")] 
-    [SerializeField] 
-    public Vector2Int size = new Vector2Int(10, 10);
-    [SerializeField] 
-    public float offset = 1f;
-    [SerializeField] 
-    private GameObject _tilePrefab;
+    [SerializeField] public Vector2Int size = new Vector2Int(10, 10);
+    [NonSerialized] public float offset = 1f;
+    [SerializeField] private GameObject[] tilePrefabs;
+    
+    [Header("Perlin Settings")]
+    [SerializeField] private int seedNoise;
+    [SerializeField] private int scaleNoise;
+    [SerializeField] private float _groundWeight;
 
-    [NonSerialized] public Tile[,] _tileGrid;
+    [NonSerialized] public Tile[,] tileGrid;
     [NonSerialized] public Vector3 worldSize;
     
     private void TileNeighbours(Tile tile)
     {
+        // Iterates on 3x3 grid around tile and checks if valid tile
         for (int xx = tile.gridPosition.x - 1; xx <= tile.gridPosition.x + 1; xx++)
         {
             for (int yy = tile.gridPosition.y - 1; yy <= tile.gridPosition.y + 1; yy++)
@@ -32,7 +35,7 @@ public class Map : MonoBehaviour
                     continue;
                 
                 // Add to neighbour tiles list
-                tile.neighbourTiles.Add(_tileGrid[currentPos.x, currentPos.y]);
+                tile.neighbourTiles.Add(tileGrid[currentPos.x, currentPos.y]);
             }
         }
     }
@@ -43,46 +46,67 @@ public class Map : MonoBehaviour
         {
             for (int y = 0; y < size.y; y++)
             {
-                TileNeighbours(_tileGrid[x, y]);
+                TileNeighbours(tileGrid[x, y]);
             }
         }
     }
 
-    private void SpawnTiles()
+    private void PerlinGenerate()
     {
+        // Randomly generate noise
+        if (seedNoise == 0)
+            seedNoise = Random.Range(0, 1000);
+    
+        if (scaleNoise == 0) 
+            scaleNoise = Random.Range(5, 10);
+        
         for (int x = 0; x < size.x; x++)
         {
             for (int y = 0; y < size.y; y++)
             {
                 Vector2 worldPos = new Vector3(x, y) * offset;
-                _tileGrid[x, y] = Instantiate(_tilePrefab, worldPos, Quaternion.identity).GetComponent<Tile>();
-                _tileGrid[x, y].gridPosition = new Vector2Int(x, y);
-                _tileGrid[x, y].worldPosition = _tileGrid[x, y].transform.position;
+                
+                // Tile to spawn
+                GameObject tilePrefab = TileFromPerlin(x, y, seedNoise, scaleNoise);
+                tileGrid[x, y] = Instantiate(tilePrefab, worldPos, Quaternion.identity).GetComponent<Tile>();
+                
+                tileGrid[x, y].gridPosition = new Vector2Int(x, y);
+                tileGrid[x, y].worldPosition = tileGrid[x, y].transform.position;
                 
                 // Set Tiles as children of Map
-                _tileGrid[x, y].transform.SetParent(_transform);
-                _tileGrid[x, y].name = $"Tile({x}, {y})";
+                tileGrid[x, y].transform.SetParent(_transform);
+                tileGrid[x, y].name = $"Tile({x}, {y})";
             }
         }
     }
 
+    private GameObject TileFromPerlin(int x, int y, int noise, int scale)
+    {
+        float xCoord = ((float)(x + noise) / size.x * scale);
+        float yCoord = ((float)(y + noise) / size.y * scale);
+        
+        float sample = Mathf.PerlinNoise(xCoord, yCoord);
+        int i = sample < _groundWeight ? 0 : 1;
+        return tilePrefabs[i];
+    }
+    
     public Tile TileFromWorldPosition(Vector3 worldPosition)
     {
         Vector2Int convertedPosition = new Vector2Int();
         convertedPosition.x = Mathf.RoundToInt(((size.x - 1) * worldPosition.x) / worldSize.x);
         convertedPosition.y = Mathf.RoundToInt(((size.y - 1) * worldPosition.y) / worldSize.y);
-        return _tileGrid[convertedPosition.x, convertedPosition.y];
+        return tileGrid[convertedPosition.x, convertedPosition.y];
     }
     
     private void Awake()
     {
         _transform = GetComponent<Transform>();
-        _tileGrid = new Tile[size.x, size.y];
+        tileGrid = new Tile[size.x, size.y];
         
-        SpawnTiles();
+        PerlinGenerate();
         FindAllNeighbours();
-        worldSize = new Vector3(_tileGrid[size.x - 1, 0].transform.position.x,
-                                        _tileGrid[0, size.y - 1].transform.position.y,
+        worldSize = new Vector3(tileGrid[size.x - 1, 0].transform.position.x,
+                                        tileGrid[0, size.y - 1].transform.position.y,
                                             0f);
     }
 }

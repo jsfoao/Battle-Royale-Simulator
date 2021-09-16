@@ -8,20 +8,12 @@ using UnityEngine.UIElements;
 public class Tile : MonoBehaviour
 {    
     [NonSerialized] public Vector2Int gridPosition;
-    [NonSerialized]
-    public Vector3 worldPosition;
+    [NonSerialized] public Vector3 worldPosition;
     public bool walkable;
-    
-    public int gCost;
-    public int hCost;
-    public int fCost => gCost + hCost;
-    public Tile parentTile;
-    public List<Tile> neighbourTiles;
-    
-    private Color _tileColor;
 
-    private void Update()
-    {
-        GetComponent<SpriteRenderer>().color = walkable ? Color.white : Color.black;
-    }
+    [NonSerialized] public int gCost;
+    [NonSerialized] public int hCost;
+    public int fCost => gCost + hCost;
+    [NonSerialized] public Tile parentTile;
+    public List<Tile> neighbourTiles;
 }

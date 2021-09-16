@@ -104,6 +104,8 @@ public class EntityController : MonoBehaviour
 
     private IEnumerator MoveAlongPath(List<Tile> tilePath)
     {
+        if (tilePath == null) { yield return null; }
+        
         int pathIndex = 0;
         currentTarget = tilePath[pathIndex].worldPosition;
         while (true)
