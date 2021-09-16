@@ -5,10 +5,11 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
+    private GameManager _gameManager;
     public string name;
-    public int health;
+    [NonSerialized] public int health;
+    [Tooltip("Bullets that Entity is carrying")]
     public int loot;
-    public float range;
 
     public string Name { get => name; set => name = value; }
     public int Health { get => health; set => health = value; }
@@ -18,12 +19,23 @@ public class Entity : MonoBehaviour
     {
         Loot += 1;
     }
-    
-    private void Update()
+
+    public void RemoveLoot()
     {
+        Loot -= 1;
+    }
+
+    public void DoDamage(int damage)
+    {
+        Health -= damage;
         if (Health <= 0)
         {
-            GetComponent<EntityController>().DestroyEntity();
+            _gameManager.DestroyEntity(gameObject);
         }
+    }
+
+    private void Start()
+    {
+        _gameManager = FindObjectOfType<GameManager>();
     }
 }

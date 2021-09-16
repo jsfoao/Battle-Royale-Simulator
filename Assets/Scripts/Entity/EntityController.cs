@@ -7,8 +7,6 @@ using Random = UnityEngine.Random;
 public class EntityController : MonoBehaviour
 {
     private GameManager _gameManager;
-    private EntityAI _entityAI;
-    private Entity _entity;
     private Transform _transform;
     private Transform _transformModel;
     private Pathfinding _pathfinding;
@@ -16,42 +14,68 @@ public class EntityController : MonoBehaviour
     private List<Tile> currentPath;
     [NonSerialized] public Transform moveTarget;
     [NonSerialized] public Transform aimTarget;
-
-    [SerializeField] public float pickupRange = 1f;
-    [SerializeField] private float sprintSpeed = 0.05f;
-    [SerializeField] private float walkSpeed = 0.02f;
+    
+    [SerializeField][Tooltip("Speed while shooting")] 
+    public float walkSpeed = 1f;
+    [SerializeField][Tooltip("Speed while wandering/looting")] 
+    public float sprintSpeed = 2f;
+    [NonSerialized] public float moveSpeed;
     
     [SerializeField] private float rotationSpeed = 8f;
     public Coroutine movement;
     [NonSerialized] public bool moving;
     private float targetTime = 3f;
     private float currentTime;
-    public Vector3 currentTarget;
+    [NonSerialized] public Vector3 currentTarget;
 
-    public void DestroyEntity()
+    #region Aiming
+    
+    // Lerp rotation to aimTarget
+    public void AimToTarget(Vector3 target)
     {
-        _gameManager.entitiesList.Remove(gameObject);
-        Destroy(gameObject);
+        aimTarget.position = Vector3.Lerp(aimTarget.position, target, rotationSpeed * Time.deltaTime);
+    }
+    
+    // Locks rotation to a target
+    public void LockOnTarget(Vector3 target)
+    {
+        Vector3 direction = target - transform.position;
+        _transformModel.right = direction.normalized;
+    }
+    #endregion
+    
+    #region Movement
+    public void SetWalkSpeed()
+    {
+        moveSpeed = walkSpeed;
+    }
+
+    public void SetSprintSpeed()
+    {
+        moveSpeed = sprintSpeed;
     }
     
     public void StopMovement()
     {
-        if (movement == null)
-        {
-            return;
-        }
-
+        if (movement == null) { return; }
         moving = false;
         StopCoroutine(movement);
     }
-    
-    public void LookAtTarget(Vector3 target, float speed)
-    {
-        Vector3 direction = target - transform.position;
-        _transformModel.right = Vector3.Lerp(_transformModel.right, direction, Time.deltaTime * speed);
-    }
 
-    public void MoveToRandomTarget(Rect area)
+    // Move to given position
+    public void MoveToPosition(Vector3 position)
+    {
+        moveTarget.position = position;
+            
+        if (map.TileFromWorldPosition(moveTarget.position).walkable == false) { return; }
+        if (moveTarget.position.x < 0 || moveTarget.position.x > map.size.x) { return; }
+        if (moveTarget.position.y < 0 || moveTarget.position.y > map.size.y) { return; }
+        
+        BeginMovement();
+    }
+    
+    // Move to random position in area
+    public void MoveToRandomPosition(Rect area)
     {
         // Randomizes target in area (square)
         moveTarget.position = new Vector3(Random.Range(area.xMin, area.xMax), Random.Range(area.yMin, area.yMax),
@@ -61,31 +85,20 @@ public class EntityController : MonoBehaviour
         if (moveTarget.position.x < 0 || moveTarget.position.x > map.size.x) { return; }
         if (moveTarget.position.y < 0 || moveTarget.position.y > map.size.y) { return; }
         
-        // Will move to target if it's walkable and inside map
-        MoveToTarget(moveTarget);
+        // Will begin movement if target tile is walkable and inside map
+        BeginMovement();
     }
 
-    public void MoveToRandomTarget(Vector3 center, float radius)
+    private void BeginMovement()
     {
-        // Randomizes target in area (circle)
-        Vector3 randomVec = new Vector3(Random.Range(0f, radius), Random.Range(0f, radius), 0f);
-        moveTarget.position = center + randomVec;
-        
-        if (map.TileFromWorldPosition(moveTarget.position).walkable == false) { return; }
-        if (moveTarget.position.x < 0 || moveTarget.position.x > map.size.x) { return; }
-        if (moveTarget.position.y < 0 || moveTarget.position.y > map.size.y) { return; }
-        
-        // Will move to target if it's walkable and inside map
-        MoveToTarget(moveTarget);
-    }
-
-    public void MoveToTarget(Transform target)
-    {
+        // Stops moving if player is currently moving
         if (movement != null) { StopCoroutine(movement); }
 
-        if (map.TileFromWorldPosition(_transform.position) == map.TileFromWorldPosition(target.position)) { return; }
+        // Returns if is already on target destination
+        if (map.TileFromWorldPosition(_transform.position) == map.TileFromWorldPosition(moveTarget.position)) { return; }
 
-        currentPath = _pathfinding.FindPath(_transform.position, target.position);
+        // Begins movement to moveTarget
+        currentPath = _pathfinding.FindPath(_transform.position, moveTarget.position);
         movement = StartCoroutine(MoveAlongPath(currentPath));
     }
 
@@ -96,40 +109,46 @@ public class EntityController : MonoBehaviour
         while (true)
         {
             moving = true;
+            // Will iterate to next target once it reached current one
             if (_transform.position == currentTarget)
             {
                 pathIndex++;
+                
+                // If reached end of tilePath
                 if (pathIndex >= tilePath.Count)
                 {
+                    // Entity is not moving
                     moving = false;
                     yield break;
                 }
 
+                // currentTarget is next position in tilePath
                 currentTarget = tilePath[pathIndex].worldPosition;
             }
 
-            _transform.position = Vector2.MoveTowards(_transform.position, currentTarget, sprintSpeed);
+            // Lerp to next position
+            _transform.position = Vector2.MoveTowards(_transform.position, currentTarget, moveSpeed * Time.deltaTime);
             
             yield return null;
         }
     }
-
+    #endregion
+    
     private void Update()
     {
-        LookAtTarget(aimTarget.position, rotationSpeed);
+        LockOnTarget(aimTarget.position);
     }
-
+    
     private void Start()
     {
         _transform = transform;
         _transformModel = transform.Find("Model");
         moveTarget = _transform.Find("MoveTarget");
         aimTarget = _transform.Find("AimTarget");
-        _entity = GetComponent<Entity>();
-        _entityAI = GetComponent<EntityAI>();
         _gameManager = FindObjectOfType<GameManager>();
         _pathfinding = FindObjectOfType<Pathfinding>();
         map = FindObjectOfType<Map>();
+
     }
 
     private void OnDrawGizmos()
@@ -143,6 +162,7 @@ public class EntityController : MonoBehaviour
                     new Vector3(.3f, .3f, .3f));
             }
         }
+        
         aimTarget = transform.Find("AimTarget");
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(aimTarget.position, 1f);

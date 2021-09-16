@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.SocialPlatforms;
 using Random = UnityEngine.Random;
 
@@ -8,37 +10,30 @@ public class EntityAI : MonoBehaviour
 {
     private Transform _transform;
     private Transform _transformModel;
-    private  GameManager gameManager;
-    private EntityController controller;
+    private  GameManager _gameManager;
+    private EntityController _controller;
     private Shooting _shooting;
-    
-    
+    private Entity _entity;
+
     [Header("AI Tick")]
     [SerializeField] private float tick = 1f;
     private float currentTime;
 
-    [Header("Distance Sense")]
-    // Entities
-    [NonSerialized] private List<GameObject> seenEntities;
-    
-    // Loots
-    [NonSerialized] private List<GameObject> seenLoots;
-
-    [Header("Vision Sense")] 
-    [SerializeField] private float viewDistance = 25f;
+    [Header("Vision Sense")]
+    [SerializeField] public float viewDistance = 25f;
     [SerializeField] [Range(0, 90)]
     private float fieldOfView = 20f;
-    [SerializeField] private GameObject closestSeenEntity;
-    [SerializeField] private GameObject closestSeenLoot;
+    private Vector2 _closestSeenLootPosition;
+    private Vector2 _closestSeenEntityPosition;
+    private readonly Vector2 _unseenVector = new Vector2(-1, -1);
+
 
     [Header("State Machine")]
     [SerializeField] private GeneralState generalState = GeneralState.Wandering;
 
     private Rect mapArea;
-    private Vector2 peripheralRight;
-    private Vector2 peripheralLeft;
-    
-    public enum GeneralState
+
+    private enum GeneralState
     {
         Nothing,
         MouseMode,
@@ -47,16 +42,12 @@ public class EntityAI : MonoBehaviour
         Shooting
     }
     
-    private List<GameObject> SeenInList(List<GameObject> list, GameObject closestObject)
+    private Vector2 ClosestSeenPosition(List<GameObject> list)
     {
-        if (list == null || list.Count == 0)
-        {
-            return null;
-        }
+        if (list == null || list.Count == 0) { return _unseenVector; }
 
-        List<GameObject> seenList = new List<GameObject>();
+        Vector2 closestPosition = _unseenVector;
         float minDistance = Int32.MaxValue;
-        
         foreach (var worldObject in list)
         {
             Vector2 direction = worldObject.transform.position - _transform.position;
@@ -65,103 +56,95 @@ public class EntityAI : MonoBehaviour
             // If not in range of player
             if (distance > viewDistance)
             {
-                if (worldObject == closestSeenEntity)
-                {
-                    closestSeenEntity = null;
-                }
-
-                if (worldObject == closestSeenLoot)
-                {
-                    closestSeenLoot = null;
-                }
                 continue;
             }
             
             // If not in FOV
             if (!(Vector2.Angle(_transformModel.right, direction) <= 90f - fieldOfView))
             {
-                if (worldObject == closestSeenEntity)
-                {
-                    closestSeenEntity = null;
-                }
-                if (worldObject == closestSeenLoot)
-                {
-                    closestSeenLoot = null;
-                }
                 continue;
             }
             
-            // If closest seen entity
-            if (direction.magnitude < minDistance)
+            // If not in line of sight
+            RaycastHit2D hit = Physics2D.Raycast((Vector2)_transform.position + direction.normalized * 0.8f, _transformModel.right * viewDistance);
+            if (hit.collider != null)
             {
-                if (worldObject != gameObject)
+                if (!hit.collider.transform.CompareTag(worldObject.tag))
                 {
-                    if (worldObject.CompareTag("Entity"))
-                    {
-                        closestSeenEntity = worldObject;
-                    }
-
-                    if (worldObject.CompareTag("Loot"))
-                    {
-                        closestSeenLoot = worldObject;
-                    }
-                    minDistance = direction.magnitude;
+                    continue;
                 }
             }
+            
+            // Calculate closest
+            if (distance < minDistance && worldObject != gameObject)
+            {
+                closestPosition = worldObject.transform.position;
+                minDistance = direction.magnitude;
+            }
         }
-
-        return seenList;
+        return closestPosition;
     }
 
-    private void DoNothing()
-    {
-    }
+    #region State Behaviours
+    private void DoNothing() { }
     
     private void DoMouseMode()
     {
-        _shooting.AimToTarget(closestSeenEntity.transform.position);
+        _controller.AimToTarget(_closestSeenEntityPosition);
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            controller.moveTarget.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            controller.moveTarget.position = new Vector3(controller.moveTarget.position.x, controller.moveTarget.position.y, 0f);
+            // moveTarget is set on mouse position
+            var position = _controller.moveTarget.position;
+            position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            position = (Vector2)(position);
+            _controller.moveTarget.position = position;
 
-            if (controller.moveTarget.position.x > controller.map.worldSize.x || controller.moveTarget.position.x < 0f) { return; }
-            if (controller.moveTarget.position.y > controller.map.worldSize.y || controller.moveTarget.position.y < 0f) { return; }
+            // Return if clicked outside of map
+            if (_controller.moveTarget.position.x > _controller.map.worldSize.x || _controller.moveTarget.position.x < 0f) { return; }
+            if (_controller.moveTarget.position.y > _controller.map.worldSize.y || _controller.moveTarget.position.y < 0f) { return; }
             
-            controller.MoveToTarget(controller.moveTarget);
+            _controller.MoveToPosition(_controller.moveTarget.position);
         }
     }
     
     private void DoWandering()
     {
-        if (controller.currentTarget != null)
+        _controller.moveSpeed = _controller.sprintSpeed;
+        if (_controller.currentTarget != null)
         {
-            _shooting.AimToTarget(controller.currentTarget);
+            _controller.AimToTarget(_controller.currentTarget);
         }
-        if (!controller.moving)
+        if (!_controller.moving)
         {
-            controller.MoveToRandomTarget(mapArea);
+            _controller.MoveToRandomPosition(mapArea);
         }
     }
 
     private void DoLooting()
     {
-        if (closestSeenLoot != null)
+        _controller.moveSpeed = _controller.sprintSpeed;
+        if (_closestSeenLootPosition != _unseenVector)
         {
-            _shooting.AimToTarget(closestSeenLoot.transform.position);
+            _controller.AimToTarget(_closestSeenLootPosition);
         }
-        if (!controller.moving && closestSeenLoot != null)
+        if (!_controller.moving && _closestSeenLootPosition != _unseenVector)
         {
-            controller.MoveToTarget(closestSeenLoot.transform);
+            _controller.MoveToPosition(_closestSeenLootPosition);
         }
     }
     
     private void DoShooting()
     {
-        if (closestSeenEntity != null)
+        _controller.moveSpeed = _controller.walkSpeed;
+        if (_closestSeenEntityPosition != _unseenVector)
         {
-            _shooting.AimToTarget(closestSeenEntity.transform.position);
+            _controller.AimToTarget(_closestSeenEntityPosition);
+        }
+        
+        if (!_controller.moving)
+        {
+            _controller.MoveToRandomPosition(mapArea);
         }
         
         _shooting.currentTime -= Time.deltaTime;
@@ -172,22 +155,31 @@ public class EntityAI : MonoBehaviour
             _shooting.currentTime = _shooting.fireRate;
         }
     }
-    
-    // Called every tick time
-    private void TickUpdate()
+    #endregion
+
+    #region Switch State Conditions
+
+    private void SwitchToWandering()
     {
-        seenEntities = SeenInList(gameManager.entitiesList, closestSeenEntity);
-        seenLoots = SeenInList(gameManager.lootsList, closestSeenLoot);
-        
-        RaycastHit2D hit = Physics2D.Raycast(_transformModel.position, _transformModel.right * viewDistance);
-        if (hit.collider != null)
-        {
-            if (hit.collider.transform.CompareTag("Entity"))
-            {
-            }
-        }
+        _controller.StopMovement();
+        _controller.SetSprintSpeed();
+        generalState = GeneralState.Wandering;
     }
-    
+    private void SwitchToLooting()
+    {
+        _controller.StopMovement();
+        _controller.SetSprintSpeed();
+        generalState = GeneralState.Looting;
+    }
+    private void SwitchToShooting()
+    {
+        _controller.StopMovement();
+        _controller.SetWalkSpeed();
+        generalState = GeneralState.Shooting;
+    }
+
+
+    #endregion
     // Called every frame
     private void Update()
     {
@@ -203,13 +195,6 @@ public class EntityAI : MonoBehaviour
         {
             case GeneralState.Nothing:
                 DoNothing();
-                
-                // // Nothing to Shooting
-                // if (closestSeenEntity != null)
-                // {
-                //     controller.StopMovement();
-                //     generalState = GeneralState.Shooting;
-                // }
                 break;
             
             case GeneralState.MouseMode:
@@ -218,37 +203,30 @@ public class EntityAI : MonoBehaviour
             
             case GeneralState.Wandering:
                 DoWandering();
-                
                 // Wandering to Looting
-                if (closestSeenLoot != null)
+                if (_closestSeenLootPosition != _unseenVector) 
                 {
-                    controller.StopMovement();
-                    generalState = GeneralState.Looting;
+                    SwitchToLooting();
                 }
-                
                 // Wandering to Shooting
-                if (closestSeenEntity != null && GetComponent<Entity>().Loot >= 1)
+                if (_closestSeenEntityPosition != _unseenVector && GetComponent<Entity>().Loot >= 1)
                 {
-                    controller.StopMovement();
-                    generalState = GeneralState.Shooting;
+                    SwitchToShooting();
                 }
                 break;
-            
+
             case GeneralState.Looting:
                 DoLooting();
                 
                 // Looting to Wandering
-                if (closestSeenLoot == null)
+                if (_closestSeenLootPosition == _unseenVector)
                 {
-                    controller.StopMovement();
-                    generalState = GeneralState.Wandering;
+                    SwitchToWandering();
                 }
-                
                 // Looting to Shooting
-                if (closestSeenEntity != null && GetComponent<Entity>().Loot >= 1)
+                if (_closestSeenEntityPosition != _unseenVector && GetComponent<Entity>().Loot >= 1)
                 {
-                    controller.StopMovement();
-                    generalState = GeneralState.Shooting;
+                    SwitchToShooting();
                 }
                 break;
             
@@ -256,34 +234,41 @@ public class EntityAI : MonoBehaviour
                 DoShooting();
                 
                 // Shooting to Wandering
-                if (closestSeenEntity == null || GetComponent<Entity>().Loot <= 0)
+                if (_closestSeenEntityPosition == _unseenVector || GetComponent<Entity>().Loot <= 0)
                 {
-                    controller.StopMovement();
-                    generalState = GeneralState.Wandering;
+                    SwitchToWandering();
                 }
                 break;
         }
+    }
+    
+    // Called every tick time
+    private void TickUpdate()
+    {
+        _closestSeenLootPosition = ClosestSeenPosition(_gameManager.lootsList);
+        _closestSeenEntityPosition = ClosestSeenPosition(_gameManager.entitiesList);
+
+        if (_closestSeenLootPosition != _unseenVector) { Debug.DrawLine(_transform.position, _closestSeenLootPosition, Color.magenta); }
+        if (_closestSeenEntityPosition != _unseenVector) { Debug.DrawLine(_transform.position, _closestSeenEntityPosition, Color.green); }
     }
 
     private void Start()
     {
         _transform = transform;
-        _transformModel = transform.Find("Model");
-        controller = GetComponent<EntityController>();
+        _transformModel = _transform.Find("Model");
+        _controller = GetComponent<EntityController>();
         _shooting = GetComponent<Shooting>();
-        gameManager = FindObjectOfType<GameManager>();
+        _gameManager = FindObjectOfType<GameManager>();
+        _entity = GetComponent<Entity>();
         currentTime = tick;
-        mapArea = new Rect(0f, 0f, controller.map.size.x - 1, controller.map.size.y - 1);
+        mapArea = new Rect(0f, 0f, _controller.map.size.x - 1, _controller.map.size.y - 1);
     }
     
     private void OnDrawGizmos()
     {
         _transform = transform;
         _transformModel = transform.Find("Model");
-        // Sense touch
-        // Gizmos.color = Color.yellow;
-        // Gizmos.DrawWireSphere(_transform.position, proximityRange);
-        
+
         // Sense distance
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(_transform.position, viewDistance);
@@ -292,6 +277,5 @@ public class EntityAI : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
-
     }
 }
