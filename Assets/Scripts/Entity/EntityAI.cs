@@ -65,12 +65,29 @@ public class EntityAI : MonoBehaviour
             // If not in range of player
             if (distance > viewDistance)
             {
+                if (worldObject == closestSeenEntity)
+                {
+                    closestSeenEntity = null;
+                }
+
+                if (worldObject == closestSeenLoot)
+                {
+                    closestSeenLoot = null;
+                }
                 continue;
             }
             
             // If not in FOV
             if (!(Vector2.Angle(_transformModel.right, direction) <= 90f - fieldOfView))
             {
+                if (worldObject == closestSeenEntity)
+                {
+                    closestSeenEntity = null;
+                }
+                if (worldObject == closestSeenLoot)
+                {
+                    closestSeenLoot = null;
+                }
                 continue;
             }
             
@@ -91,8 +108,6 @@ public class EntityAI : MonoBehaviour
                     minDistance = direction.magnitude;
                 }
             }
-
-            Debug.DrawLine(_transform.position, worldObject.transform.position, Color.green);
         }
 
         return seenList;
@@ -104,7 +119,7 @@ public class EntityAI : MonoBehaviour
     
     private void DoMouseMode()
     {
-        _shooting.AimToTarget(closestSeenEntity);
+        _shooting.AimToTarget(closestSeenEntity.transform.position);
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -120,7 +135,10 @@ public class EntityAI : MonoBehaviour
     
     private void DoWandering()
     {
-        _shooting.AimToTarget(controller.moveTarget.gameObject);
+        if (controller.currentTarget != null)
+        {
+            _shooting.AimToTarget(controller.currentTarget);
+        }
         if (!controller.moving)
         {
             controller.MoveToRandomTarget(mapArea);
@@ -129,7 +147,10 @@ public class EntityAI : MonoBehaviour
 
     private void DoLooting()
     {
-        _shooting.AimToTarget(closestSeenLoot);
+        if (closestSeenLoot != null)
+        {
+            _shooting.AimToTarget(closestSeenLoot.transform.position);
+        }
         if (!controller.moving && closestSeenLoot != null)
         {
             controller.MoveToTarget(closestSeenLoot.transform);
@@ -138,21 +159,33 @@ public class EntityAI : MonoBehaviour
     
     private void DoShooting()
     {
-        _shooting.AimToTarget(closestSeenEntity);
-        // _shooting.currentTime -= Time.deltaTime;
-        // if (_shooting.currentTime <= 0)
-        // {
-        //     _shooting.Shoot(closestSeenEntity);
-        //     
-        //     _shooting.currentTime = _shooting.fireRate;
-        // }
+        if (closestSeenEntity != null)
+        {
+            _shooting.AimToTarget(closestSeenEntity.transform.position);
+        }
+        
+        _shooting.currentTime -= Time.deltaTime;
+        if (_shooting.currentTime <= 0)
+        {
+            _shooting.Shoot();
+            
+            _shooting.currentTime = _shooting.fireRate;
+        }
     }
     
-    // Called every second
+    // Called every tick time
     private void TickUpdate()
     {
-        //seenEntities = SeenInList(gameManager.entitiesList, closestSeenEntity);
+        seenEntities = SeenInList(gameManager.entitiesList, closestSeenEntity);
         seenLoots = SeenInList(gameManager.lootsList, closestSeenLoot);
+        
+        RaycastHit2D hit = Physics2D.Raycast(_transformModel.position, _transformModel.right * viewDistance);
+        if (hit.collider != null)
+        {
+            if (hit.collider.transform.CompareTag("Entity"))
+            {
+            }
+        }
     }
     
     // Called every frame
@@ -193,12 +226,12 @@ public class EntityAI : MonoBehaviour
                     generalState = GeneralState.Looting;
                 }
                 
-                // // Wandering to Shooting
-                // if (closestSeenEntity != null)
-                // {
-                //     controller.StopMovement();
-                //     generalState = GeneralState.Shooting;
-                // }
+                // Wandering to Shooting
+                if (closestSeenEntity != null && GetComponent<Entity>().Loot >= 1)
+                {
+                    controller.StopMovement();
+                    generalState = GeneralState.Shooting;
+                }
                 break;
             
             case GeneralState.Looting:
@@ -211,19 +244,19 @@ public class EntityAI : MonoBehaviour
                     generalState = GeneralState.Wandering;
                 }
                 
-                // // Looting to Shooting
-                // if (closestSeenEntity != null)
-                // {
-                //     controller.StopMovement();
-                //     generalState = GeneralState.Shooting;
-                // }
+                // Looting to Shooting
+                if (closestSeenEntity != null && GetComponent<Entity>().Loot >= 1)
+                {
+                    controller.StopMovement();
+                    generalState = GeneralState.Shooting;
+                }
                 break;
             
             case GeneralState.Shooting:
                 DoShooting();
                 
                 // Shooting to Wandering
-                if (closestSeenEntity == null)
+                if (closestSeenEntity == null || GetComponent<Entity>().Loot <= 0)
                 {
                     controller.StopMovement();
                     generalState = GeneralState.Wandering;

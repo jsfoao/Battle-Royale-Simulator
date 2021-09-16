@@ -26,6 +26,7 @@ public class EntityController : MonoBehaviour
     [NonSerialized] public bool moving;
     private float targetTime = 3f;
     private float currentTime;
+    public Vector3 currentTarget;
 
     public void DestroyEntity()
     {
@@ -91,7 +92,7 @@ public class EntityController : MonoBehaviour
     private IEnumerator MoveAlongPath(List<Tile> tilePath)
     {
         int pathIndex = 0;
-        Vector3 currentTarget = tilePath[pathIndex].worldPosition;
+        currentTarget = tilePath[pathIndex].worldPosition;
         while (true)
         {
             moving = true;

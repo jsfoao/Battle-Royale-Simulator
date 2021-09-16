@@ -255,10 +255,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityPrefab: {fileID: 5634166467280325268, guid: e3627633ba30201438714ca997226e05, type: 3}
-  entitiesTotal: 3
+  entitiesTotal: 5
   entitiesList: []
   lootPrefab: {fileID: 5048309848263699149, guid: 2b3f00bf92acd6440918170b7583db31, type: 3}
-  lootTotal: 50
+  lootTotal: 100
   lootsList: []
 --- !u!4 &664954023
 Transform:

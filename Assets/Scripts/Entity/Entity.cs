@@ -13,7 +13,6 @@ public class Entity : MonoBehaviour
     public string Name { get => name; set => name = value; }
     public int Health { get => health; set => health = value; }
     public int Loot { get => loot; set => loot = value; }
-    public float Range { get => range; set => range = value; }
 
     public void AddLoot()
     {
