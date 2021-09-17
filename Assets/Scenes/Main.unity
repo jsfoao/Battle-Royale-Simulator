@@ -200,18 +200,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
-      propertyPath: size.x
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
-      propertyPath: size.y
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
-      propertyPath: _groundWeight
-      value: 0.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
       propertyPath: _halfwallWeight
       value: 0.7
       objectReference: {fileID: 0}

@@ -66,7 +66,7 @@ public class EntityAI : MonoBehaviour
             }
             
             // If not in line of sight
-            RaycastHit2D hit = Physics2D.Raycast((Vector2)_transform.position, direction.normalized * viewDistance);
+            RaycastHit2D hit = Physics2D.Raycast((Vector2)_transform.position + direction.normalized * 0.8f, direction.normalized * viewDistance);
             if (hit.collider != null)
             {
                 if (hit.collider.transform.tag == "Wall")
@@ -97,7 +97,10 @@ public class EntityAI : MonoBehaviour
     
     private void DoMouseMode()
     {
-        _controller.AimToTarget(_closestSeenEntityPosition);
+        if (_closestSeenEntityPosition != _unseenVector)
+        {
+            _controller.AimToTarget(_closestSeenEntityPosition);
+        }
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -281,14 +284,16 @@ public class EntityAI : MonoBehaviour
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
 
-        // Gizmos.color = Color.magenta;
-        // if (_closestSeenLootPosition != _unseenVector)
-        // {
-        //     Gizmos.DrawLine(_transform.position, _closestSeenLootPosition);
-        // }
-        // if (_closestSeenEntityPosition != _unseenVector)
-        // {
-        //     Gizmos.DrawLine(_transform.position, _closestSeenEntityPosition);
-        // }
+        Gizmos.color = Color.magenta;
+        if (_closestSeenLootPosition != _unseenVector)
+        {
+            Gizmos.DrawLine(_transform.position, _closestSeenLootPosition);
+        }
+        
+        Gizmos.color = Color.green;
+        if (_closestSeenEntityPosition != _unseenVector)
+        {
+            Gizmos.DrawLine(_transform.position, _closestSeenEntityPosition);
+        }
     }
 }
