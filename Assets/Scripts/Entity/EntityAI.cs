@@ -66,15 +66,16 @@ public class EntityAI : MonoBehaviour
             }
             
             // If not in line of sight
-            RaycastHit2D hit = Physics2D.Raycast((Vector2)_transform.position + direction.normalized * 0.8f, _transformModel.right * viewDistance);
+            RaycastHit2D hit = Physics2D.Raycast((Vector2)_transform.position, direction.normalized * viewDistance);
             if (hit.collider != null)
             {
-                if (!hit.collider.transform.CompareTag(worldObject.tag))
+                if (hit.collider.transform.tag == "Wall")
                 {
                     continue;
                 }
             }
             
+            // Debug.DrawRay((Vector2)_transform.position + direction.normalized * 0.8f, direction.normalized * viewDistance, Color.red);
             // Calculate closest
             if (distance < minDistance && worldObject != gameObject)
             {
@@ -86,7 +87,13 @@ public class EntityAI : MonoBehaviour
     }
 
     #region State Behaviours
-    private void DoNothing() { }
+    private void DoNothing()
+    {
+        if (_closestSeenEntityPosition != _unseenVector)
+        {
+            _controller.AimToTarget(_closestSeenEntityPosition);
+        }
+    }
     
     private void DoMouseMode()
     {
@@ -224,7 +231,7 @@ public class EntityAI : MonoBehaviour
                     SwitchToWandering();
                 }
                 // Looting to Shooting
-                if (_closestSeenEntityPosition != _unseenVector && GetComponent<Entity>().Loot >= 1)
+                if (_closestSeenEntityPosition != _unseenVector && _entity.Loot >= 1)
                 {
                     SwitchToShooting();
                 }
@@ -232,9 +239,8 @@ public class EntityAI : MonoBehaviour
             
             case GeneralState.Shooting:
                 DoShooting();
-                
                 // Shooting to Wandering
-                if (_closestSeenEntityPosition == _unseenVector || GetComponent<Entity>().Loot <= 0)
+                if (_closestSeenEntityPosition == _unseenVector || _entity.Loot <= 0)
                 {
                     SwitchToWandering();
                 }
@@ -247,9 +253,6 @@ public class EntityAI : MonoBehaviour
     {
         _closestSeenLootPosition = ClosestSeenPosition(_gameManager.lootsList);
         _closestSeenEntityPosition = ClosestSeenPosition(_gameManager.entitiesList);
-
-        if (_closestSeenLootPosition != _unseenVector) { Debug.DrawLine(_transform.position, _closestSeenLootPosition, Color.magenta); }
-        if (_closestSeenEntityPosition != _unseenVector) { Debug.DrawLine(_transform.position, _closestSeenEntityPosition, Color.green); }
     }
 
     private void Start()
@@ -277,5 +280,15 @@ public class EntityAI : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
         Gizmos.DrawRay(_transform.position, _transformModel.rotation * new Vector2(Mathf.Sin(Mathf.Deg2Rad * fieldOfView), -Mathf.Cos(Mathf.Deg2Rad * fieldOfView)) * viewDistance);
+
+        // Gizmos.color = Color.magenta;
+        // if (_closestSeenLootPosition != _unseenVector)
+        // {
+        //     Gizmos.DrawLine(_transform.position, _closestSeenLootPosition);
+        // }
+        // if (_closestSeenEntityPosition != _unseenVector)
+        // {
+        //     Gizmos.DrawLine(_transform.position, _closestSeenEntityPosition);
+        // }
     }
 }

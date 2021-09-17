@@ -56,16 +56,14 @@ public class GameManager : MonoBehaviour
 
         return result;
     }
-    
-    private void Start()
+
+    private void SpawnWorldObjects()
     {
-        _map = FindObjectOfType<Map>();
-        
         // Spawn entities
         for (int i = 0; i <= entitiesTotal; i++)
         {
             bool entitySpawned = false;
-            if (i == entitiesTotal) { return; }
+            if (i == entitiesTotal) { break; }
 
             while (!entitySpawned)
             {
@@ -82,7 +80,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i <= lootTotal; i++)
         {
             bool lootSpawned = false;
-            if (i == entitiesTotal) { return; }
+            if (i == lootTotal) { break; }
 
             while (!lootSpawned)
             {
@@ -94,5 +92,12 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+    
+    private void Start()
+    {
+        _map = FindObjectOfType<Map>();
+
+        SpawnWorldObjects();
     }
 }

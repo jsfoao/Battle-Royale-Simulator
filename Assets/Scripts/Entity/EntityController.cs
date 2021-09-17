@@ -108,6 +108,7 @@ public class EntityController : MonoBehaviour
         
         int pathIndex = 0;
         currentTarget = tilePath[pathIndex].worldPosition;
+        
         while (true)
         {
             moving = true;

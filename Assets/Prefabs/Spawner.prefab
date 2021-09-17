@@ -106,8 +106,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entityPrefab: {fileID: 5634166467280325268, guid: e3627633ba30201438714ca997226e05, type: 3}
-  entitiesTotal: 40
+  entitiesTotal: 10
   entitiesList: []
   lootPrefab: {fileID: 5048309848263699149, guid: 2b3f00bf92acd6440918170b7583db31, type: 3}
-  lootTotal: 200
+  lootTotal: 50
   lootsList: []

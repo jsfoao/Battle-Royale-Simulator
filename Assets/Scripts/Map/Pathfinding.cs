@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
 {
-    // G Cost: Cost of path to start tile
-    // H Cost:
-    // F Cost: 
     private const int STRAIGHT_COST = 10;
     private const int DIAGONAL_COST = 14;
     
@@ -25,11 +22,13 @@ public class Pathfinding : MonoBehaviour
         cost = distToTriangle * STRAIGHT_COST + triangleSize * DIAGONAL_COST;
         return cost;
     }
-
+    
     private List<Tile> BacktrackPath(Tile startTile, Tile targetTile)
     {
         List<Tile> tilePath = new List<Tile>();
         Tile currentTile = targetTile;
+        
+        // Add saved parents of each tile to tilePath
         while (currentTile != startTile)
         {
             tilePath.Add(currentTile);

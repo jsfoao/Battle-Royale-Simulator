@@ -406,7 +406,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   name: 
-  loot: 5
+  health: 100
+  loot: 10
 --- !u!114 &7050706438821605243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,7 +420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 053e6d63b254dfc4fbebe66d93f5121a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 0.5
+  walkSpeed: 0.3
   sprintSpeed: 2
   rotationSpeed: 3
 --- !u!114 &633466900864567575
@@ -434,7 +435,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08500721ecccea14eaa0df20a6bda511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tick: 0.0001
+  tick: 0.1
   viewDistance: 10
   fieldOfView: 20
   generalState: 2

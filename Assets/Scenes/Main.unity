@@ -208,6 +208,10 @@ PrefabInstance:
       value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
+      propertyPath: _groundWeight
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5633775892126971608, guid: f07ce7f6aa7a0794798098a04623b604, type: 3}
       propertyPath: _halfwallWeight
       value: 0.7
       objectReference: {fileID: 0}
@@ -273,16 +277,8 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
-      propertyPath: lootTotal
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
       propertyPath: m_Enabled
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6983834150567398428, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
-      propertyPath: entitiesTotal
-      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 6983834150567398429, guid: d6f50e45c5365ed48a2bb6f439bc4abf, type: 3}
       propertyPath: m_RootOrder

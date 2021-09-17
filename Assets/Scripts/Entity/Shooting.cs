@@ -34,7 +34,7 @@ public class Shooting : MonoBehaviour
                 entity.DoDamage(damage);
             }
         }
-        Debug.DrawRay(position + right * 0.8f, right * _entityAI.viewDistance, Color.red, 0.1f);
+        Debug.DrawRay(position + right * 0.8f, right * _entityAI.viewDistance, Color.green, 0.1f);
     }
 
     private void Start()

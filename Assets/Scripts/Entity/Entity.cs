@@ -7,7 +7,7 @@ public class Entity : MonoBehaviour
 {
     private GameManager _gameManager;
     public string name;
-    [NonSerialized] public int health;
+    [SerializeField] public int health;
     [Tooltip("Bullets that Entity is carrying")]
     public int loot;
 
